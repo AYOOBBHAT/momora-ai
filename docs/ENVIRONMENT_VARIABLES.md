@@ -75,6 +75,8 @@ Expo exposes only variables prefixed with `EXPO_PUBLIC_` to the client bundle.
 |----------|----------|---------|-------------|
 | `EXPO_PUBLIC_API_URL` | **Yes** | — | Backend base URL, no trailing slash |
 | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | For Google sign-in | — | Must match backend `GOOGLE_CLIENT_ID` |
+| `EXPO_PUBLIC_PRIVACY_POLICY_URL` | For Profile legal links | — | Deployed Privacy Policy URL (e.g. `https://your-domain/privacy`) |
+| `EXPO_PUBLIC_TERMS_OF_SERVICE_URL` | For Profile legal links | — | Deployed Terms of Service URL (e.g. `https://your-domain/terms`) |
 
 ### Mobile examples
 
@@ -83,6 +85,8 @@ Expo exposes only variables prefixed with `EXPO_PUBLIC_` to the client bundle.
 ```env
 EXPO_PUBLIC_API_URL=http://localhost:4000
 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=123456789.apps.googleusercontent.com
+EXPO_PUBLIC_PRIVACY_POLICY_URL=https://your-domain/privacy
+EXPO_PUBLIC_TERMS_OF_SERVICE_URL=https://your-domain/terms
 ```
 
 **Android emulator (host machine API):**
@@ -104,6 +108,8 @@ Set in `mobile/eas.json` profile `env` or EAS Secrets:
 ```env
 EXPO_PUBLIC_API_URL=https://api.yourdomain.com
 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=123456789.apps.googleusercontent.com
+EXPO_PUBLIC_PRIVACY_POLICY_URL=https://your-domain/privacy
+EXPO_PUBLIC_TERMS_OF_SERVICE_URL=https://your-domain/terms
 ```
 
 ### EAS Secrets (recommended for production)
@@ -112,6 +118,8 @@ EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=123456789.apps.googleusercontent.com
 cd mobile
 eas secret:create --name EXPO_PUBLIC_API_URL --value https://api.yourdomain.com --scope project
 eas secret:create --name EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID --value <client-id> --scope project
+eas secret:create --name EXPO_PUBLIC_PRIVACY_POLICY_URL --value https://your-domain/privacy --scope project
+eas secret:create --name EXPO_PUBLIC_TERMS_OF_SERVICE_URL --value https://your-domain/terms --scope project
 ```
 
 Reference secrets in `eas.json` or rely on EAS injecting them at build time.

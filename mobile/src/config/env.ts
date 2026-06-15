@@ -26,5 +26,9 @@ export const env = {
 
   googleWebClientId: optionalEnv(process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID),
 
+  privacyPolicyUrl: optionalEnv(process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL),
+
+  termsOfServiceUrl: optionalEnv(process.env.EXPO_PUBLIC_TERMS_OF_SERVICE_URL),
+
 } as const;
 

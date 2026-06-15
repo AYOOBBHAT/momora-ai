@@ -1,15 +1,69 @@
 import {
   ActivityIndicator,
+  Alert,
+  Linking,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
+import { env } from '../../../config/env';
 import { useAuthMe } from '../../../hooks/queries/useAuthMe';
 import { useLogout } from '../../../hooks/mutations/useLogout';
 import { getApiErrorMessage } from '../../../lib/apiError';
 import { useTheme } from '../../../theme/ThemeProvider';
+
+function openExternalUrl(url: string, label: string) {
+  if (!url) {
+    Alert.alert(
+      `${label} unavailable`,
+      `${label} URL is not configured. Set the corresponding EXPO_PUBLIC_* variable.`,
+    );
+    return;
+  }
+
+  void Linking.openURL(url).catch(() => {
+    Alert.alert('Unable to open link', `Could not open ${label}.`);
+  });
+}
+
+interface ProfileMenuItemProps {
+  label: string;
+  onPress: () => void;
+}
+
+function ProfileMenuItem({ label, onPress }: ProfileMenuItemProps) {
+  const { theme } = useTheme();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.menuItem,
+        {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          opacity: pressed ? 0.85 : 1,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.menuItemText,
+          {
+            color: theme.colors.text,
+            fontSize: theme.typography.fontSizes.md,
+            fontWeight: theme.typography.fontWeights.medium,
+          },
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
 
 export function ProfileScreen() {
   const { theme } = useTheme();
@@ -72,6 +126,17 @@ export function ProfileScreen() {
           Unable to load profile
         </Text>
       )}
+
+      <View style={styles.menu}>
+        <ProfileMenuItem
+          label="Privacy Policy"
+          onPress={() => openExternalUrl(env.privacyPolicyUrl, 'Privacy Policy')}
+        />
+        <ProfileMenuItem
+          label="Terms of Service"
+          onPress={() => openExternalUrl(env.termsOfServiceUrl, 'Terms of Service')}
+        />
+      </View>
 
       {logout.error ? (
         <Text style={[styles.error, { color: theme.colors.error }]}>
@@ -138,13 +203,30 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: 'center',
   },
+  menu: {
+    width: '100%',
+    maxWidth: 320,
+    gap: 10,
+    marginTop: 8,
+  },
+  menuItem: {
+    minHeight: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  menuItemText: {
+    textAlign: 'center',
+  },
   error: {
     fontSize: 14,
     textAlign: 'center',
     marginTop: 8,
   },
   logoutButton: {
-    marginTop: 16,
+    marginTop: 8,
     minWidth: 160,
     minHeight: 44,
     borderRadius: 12,

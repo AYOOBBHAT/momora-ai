@@ -17,6 +17,8 @@ npx expo start
 |----------|----------|-------------|
 | `EXPO_PUBLIC_API_URL` | Yes | Backend API base URL (no trailing slash). Default: `http://localhost:4000` |
 | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | For Google sign-in | OAuth 2.0 **Web** client ID from Google Cloud Console. Must match backend `GOOGLE_CLIENT_ID`. |
+| `EXPO_PUBLIC_PRIVACY_POLICY_URL` | For Profile legal links | Deployed Privacy Policy URL (e.g. `https://your-domain/privacy`) |
+| `EXPO_PUBLIC_TERMS_OF_SERVICE_URL` | For Profile legal links | Deployed Terms of Service URL (e.g. `https://your-domain/terms`) |
 
 **Android emulator:** use `EXPO_PUBLIC_API_URL=http://10.0.2.2:4000` so the emulator can reach the backend on your host machine.
 
