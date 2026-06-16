@@ -28,7 +28,7 @@ export function getRefreshTokenExpiry(): Date {
 
   const match = expiresIn.match(/^(\d+)([dhms])$/);
   if (!match) {
-    return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   }
 
   const value = parseInt(match[1], 10);
@@ -44,6 +44,6 @@ export function getRefreshTokenExpiry(): Date {
     case 's':
       return new Date(now.getTime() + value * 1000);
     default:
-      return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   }
 }

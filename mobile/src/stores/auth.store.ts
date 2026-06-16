@@ -7,8 +7,10 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
   isHydrated: boolean;
+  isSessionOffline: boolean;
   hydrate: () => Promise<void>;
   setSession: (accessToken: string, refreshToken: string) => Promise<void>;
+  setSessionOffline: (offline: boolean) => void;
   clearSession: () => Promise<void>;
 }
 
@@ -17,6 +19,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   refreshToken: null,
   isAuthenticated: false,
   isHydrated: false,
+  isSessionOffline: false,
 
   hydrate: async () => {
     try {
@@ -28,8 +31,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         accessToken,
         refreshToken,
-        isAuthenticated: Boolean(accessToken && refreshToken),
+        isAuthenticated: Boolean(refreshToken),
         isHydrated: true,
+        isSessionOffline: false,
       });
     } catch {
       set({
@@ -37,6 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         refreshToken: null,
         isAuthenticated: false,
         isHydrated: true,
+        isSessionOffline: false,
       });
     }
   },
@@ -47,7 +52,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       accessToken,
       refreshToken,
       isAuthenticated: true,
+      isSessionOffline: false,
     });
+  },
+
+  setSessionOffline: (offline) => {
+    set({ isSessionOffline: offline });
   },
 
   clearSession: async () => {
@@ -56,6 +66,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
+      isSessionOffline: false,
     });
   },
 }));

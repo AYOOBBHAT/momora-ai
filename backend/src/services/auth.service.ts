@@ -52,11 +52,13 @@ async function generateTokens(user: IUserDocument): Promise<AuthTokens> {
 }
 
 export function setRefreshTokenCookie(res: Response, refreshToken: string): void {
+  const maxAge = Math.max(0, getRefreshTokenExpiry().getTime() - Date.now());
+
   res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
     sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge,
     path: '/api/v1/auth',
   });
 }

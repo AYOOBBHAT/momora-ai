@@ -14,7 +14,7 @@ File template: `backend/.env.example`
 | `JWT_ACCESS_SECRET` | **Yes** | — | Secret for signing access tokens (min 32 characters) |
 | `JWT_REFRESH_SECRET` | **Yes** | — | Secret for signing refresh tokens (min 32 characters) |
 | `JWT_ACCESS_EXPIRES_IN` | No | `15m` | Access token lifetime (e.g. `15m`, `1h`) |
-| `JWT_REFRESH_EXPIRES_IN` | No | `7d` | Refresh token lifetime |
+| `JWT_REFRESH_EXPIRES_IN` | No | `30d` | Refresh token lifetime (mobile sessions persist up to 30 days) |
 | `CORS_ORIGINS` | Prod: **Yes** · Dev: optional | Dev defaults | Comma-separated **browser** origins (e.g. `http://localhost:3000,http://localhost:19006`). HTTPS only in production; `*` forbidden in production. Native mobile (Expo/APK) omits `Origin` and is allowed. |
 | `CORS_ORIGIN` | Deprecated | — | Legacy single origin; use `CORS_ORIGINS` instead |
 | `BCRYPT_SALT_ROUNDS` | No | `12` | Password hashing cost (10–15) |

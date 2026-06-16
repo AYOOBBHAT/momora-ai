@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
+import { View } from 'react-native';
 
+import { SessionOfflineBanner } from '../components/SessionOfflineBanner';
 import { useOnboardingLaunchStore } from '../stores/onboarding.store';
 import { navigationRef } from './navigationRef';
 import { MainTabs } from './MainTabs';
@@ -42,5 +44,10 @@ export function MainAppEntry() {
     navigateToChat();
   }, [consumePendingChatLaunch, openChatOnLaunch]);
 
-  return <MainTabs />;
+  return (
+    <View style={{ flex: 1 }}>
+      <SessionOfflineBanner />
+      <MainTabs />
+    </View>
+  );
 }

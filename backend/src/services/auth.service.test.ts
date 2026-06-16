@@ -29,8 +29,10 @@ vi.mock('@/services/token.service', () => ({
 }));
 
 import { User } from '@/models/User.model';
-import { RefreshToken } from '@/models/RefreshToken.model';
+import { RefreshToken, hashToken } from '@/models/RefreshToken.model';
+import { HTTP_STATUS } from '@/constants/httpStatus';
 import { login, register, refreshTokens } from '@/services/auth.service';
+import { verifyRefreshToken } from '@/services/token.service';
 
 const mockUser = {
   _id: { toString: () => 'user-id-1' },
@@ -100,5 +102,38 @@ describe('auth.service token responses', () => {
         token: 'hashed-mock-refresh-token',
       }),
     );
+  });
+
+  it('refreshTokens rejects revoked refresh tokens', async () => {
+    vi.mocked(RefreshToken.findOne).mockResolvedValue(null);
+
+    await expect(refreshTokens('revoked-refresh-token')).rejects.toMatchObject({
+      statusCode: HTTP_STATUS.UNAUTHORIZED,
+      message: 'Refresh token not found or revoked',
+    });
+  });
+
+  it('refreshTokens rejects expired refresh tokens', async () => {
+    vi.mocked(RefreshToken.findOne).mockResolvedValue({
+      expiresAt: new Date('2020-01-01T00:00:00.000Z'),
+      revokedAt: null,
+      save: vi.fn(),
+    } as never);
+
+    await expect(refreshTokens('expired-refresh-token')).rejects.toMatchObject({
+      statusCode: HTTP_STATUS.UNAUTHORIZED,
+      message: 'Refresh token expired',
+    });
+  });
+
+  it('refreshTokens rejects invalid JWT refresh tokens', async () => {
+    vi.mocked(verifyRefreshToken).mockImplementationOnce(() => {
+      throw new Error('jwt expired');
+    });
+
+    await expect(refreshTokens('invalid-jwt')).rejects.toMatchObject({
+      statusCode: HTTP_STATUS.UNAUTHORIZED,
+      message: 'Invalid or expired refresh token',
+    });
   });
 });

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import * as authService from '../../../api/services/auth.service';
+import { restoreSession } from '../../../lib/sessionRestore';
+import { performTokenRefresh } from '../../../lib/tokenRefresh';
 import { useAuthStore } from '../../../stores/auth.store';
 import { useTheme } from '../../../theme/ThemeProvider';
 
@@ -12,8 +14,9 @@ interface SplashScreenProps {
 export function SplashScreen({ onReady }: SplashScreenProps) {
   const { theme } = useTheme();
   const isHydrated = useAuthStore((state) => state.isHydrated);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const refreshToken = useAuthStore((state) => state.refreshToken);
   const clearSession = useAuthStore((state) => state.clearSession);
+  const setSessionOffline = useAuthStore((state) => state.setSessionOffline);
   const [statusText, setStatusText] = useState('Loading…');
 
   useEffect(() => {
@@ -24,7 +27,7 @@ export function SplashScreen({ onReady }: SplashScreenProps) {
     let cancelled = false;
 
     async function bootstrap() {
-      if (!isAuthenticated) {
+      if (!refreshToken) {
         if (!cancelled) {
           onReady();
         }
@@ -33,14 +36,16 @@ export function SplashScreen({ onReady }: SplashScreenProps) {
 
       setStatusText('Restoring session…');
 
-      try {
-        await authService.getMe();
-      } catch {
-        await clearSession();
-      } finally {
-        if (!cancelled) {
-          onReady();
-        }
+      await restoreSession({
+        refreshToken,
+        refresh: performTokenRefresh,
+        getMe: authService.getMe,
+        clearSession,
+        setSessionOffline,
+      });
+
+      if (!cancelled) {
+        onReady();
       }
     }
 
@@ -49,7 +54,7 @@ export function SplashScreen({ onReady }: SplashScreenProps) {
     return () => {
       cancelled = true;
     };
-  }, [isHydrated, isAuthenticated, clearSession, onReady]);
+  }, [isHydrated, refreshToken, clearSession, setSessionOffline, onReady]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
