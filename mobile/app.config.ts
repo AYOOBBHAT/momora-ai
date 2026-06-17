@@ -1,6 +1,21 @@
 import { ExpoConfig, ConfigContext } from 'expo/config';
 
-import { googleClientIdToNativeRedirectScheme } from './src/lib/googleOAuthRedirect';
+const GOOGLE_CLIENT_ID_SUFFIX = '.apps.googleusercontent.com';
+
+/** Inline for Expo config — Node cannot require TS files under src/ at config time. */
+function googleClientIdToNativeRedirectScheme(clientId: string): string | null {
+  const normalized = clientId.trim();
+  if (!normalized.endsWith(GOOGLE_CLIENT_ID_SUFFIX)) {
+    return null;
+  }
+
+  const clientIdPart = normalized.slice(0, -GOOGLE_CLIENT_ID_SUFFIX.length);
+  if (!clientIdPart) {
+    return null;
+  }
+
+  return `com.googleusercontent.apps.${clientIdPart}`;
+}
 
 const googleAndroidAuthScheme = googleClientIdToNativeRedirectScheme(
   process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? '',
