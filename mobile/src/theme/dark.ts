@@ -1,8 +1,10 @@
-import { AppTheme, palette, spacing, typography } from './tokens';
+import { AppTheme, palette, radii, spacing, typography, elevation } from './tokens';
 
 export const darkTheme: AppTheme = {
   dark: true,
   spacing,
+  radii,
+  elevation,
   typography,
   colors: {
     background: palette.slate950,

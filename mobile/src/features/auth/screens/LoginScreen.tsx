@@ -64,6 +64,7 @@ export function LoginScreen({ navigation }: Props) {
     {
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.border,
+      borderRadius: theme.radii.md,
       color: theme.colors.text,
     },
   ];

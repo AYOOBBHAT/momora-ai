@@ -3,10 +3,12 @@ import {
   Alert,
   Linking,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { env } from '../../../config/env';
 import { useAuthMe } from '../../../hooks/queries/useAuthMe';
@@ -45,7 +47,8 @@ function ProfileMenuItem({ label, onPress }: ProfileMenuItemProps) {
         {
           backgroundColor: theme.colors.surface,
           borderColor: theme.colors.border,
-          opacity: pressed ? 0.85 : 1,
+          borderRadius: theme.radii.md,
+          opacity: pressed ? 0.9 : 1,
         },
       ]}
     >
@@ -65,20 +68,42 @@ function ProfileMenuItem({ label, onPress }: ProfileMenuItemProps) {
   );
 }
 
+function getInitials(name?: string): string {
+  if (!name?.trim()) {
+    return '?';
+  }
+
+  const parts = name.trim().split(/\s+/);
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
 export function ProfileScreen() {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const { data: user, isLoading } = useAuthMe();
   const logout = useLogout();
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        {
+          paddingTop: insets.top + theme.spacing.lg,
+          paddingBottom: insets.bottom + theme.spacing.lg,
+        },
+      ]}
+      style={{ backgroundColor: theme.colors.background }}
+    >
       <Text
         style={[
           styles.title,
           {
             color: theme.colors.text,
             fontSize: theme.typography.fontSizes.xl,
-            fontWeight: theme.typography.fontWeights.semibold,
+            fontWeight: theme.typography.fontWeights.bold,
           },
         ]}
       >
@@ -86,16 +111,48 @@ export function ProfileScreen() {
       </Text>
 
       {isLoading ? (
-        <ActivityIndicator color={theme.colors.primary} />
+        <ActivityIndicator color={theme.colors.primary} style={styles.loader} />
       ) : user ? (
-        <View style={styles.userInfo}>
+        <View
+          style={[
+            styles.profileCard,
+            theme.elevation.soft,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              borderRadius: theme.radii.lg,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.avatar,
+              {
+                backgroundColor: `${theme.colors.primary}22`,
+                borderRadius: theme.radii.full,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.avatarText,
+                {
+                  color: theme.colors.primary,
+                  fontSize: theme.typography.fontSizes.lg,
+                  fontWeight: theme.typography.fontWeights.bold,
+                },
+              ]}
+            >
+              {getInitials(user.name)}
+            </Text>
+          </View>
           <Text
             style={[
               styles.name,
               {
                 color: theme.colors.text,
                 fontSize: theme.typography.fontSizes.lg,
-                fontWeight: theme.typography.fontWeights.medium,
+                fontWeight: theme.typography.fontWeights.semibold,
               },
             ]}
           >
@@ -106,7 +163,7 @@ export function ProfileScreen() {
               styles.email,
               {
                 color: theme.colors.textSecondary,
-                fontSize: theme.typography.fontSizes.md,
+                fontSize: theme.typography.fontSizes.sm,
               },
             ]}
           >
@@ -153,6 +210,7 @@ export function ProfileScreen() {
           {
             backgroundColor: theme.colors.surface,
             borderColor: theme.colors.border,
+            borderRadius: theme.radii.md,
             opacity: pressed || logout.isPending ? 0.85 : 1,
           },
         ]}
@@ -174,26 +232,36 @@ export function ProfileScreen() {
           </Text>
         )}
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    gap: 12,
+    flexGrow: 1,
+    paddingHorizontal: 16,
+    gap: 16,
   },
   title: {
-    textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  userInfo: {
+  loader: {
+    marginVertical: 24,
+  },
+  profileCard: {
     alignItems: 'center',
-    gap: 4,
+    borderWidth: 1,
+    padding: 24,
+    gap: 8,
   },
+  avatar: {
+    width: 72,
+    height: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  avatarText: {},
   name: {
     textAlign: 'center',
   },
@@ -204,32 +272,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   menu: {
-    width: '100%',
-    maxWidth: 320,
     gap: 10,
     marginTop: 8,
   },
   menuItem: {
-    minHeight: 48,
-    borderRadius: 12,
+    minHeight: 52,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
-  menuItemText: {
-    textAlign: 'center',
-  },
+  menuItemText: {},
   error: {
     fontSize: 14,
     textAlign: 'center',
-    marginTop: 8,
   },
   logoutButton: {
     marginTop: 8,
-    minWidth: 160,
-    minHeight: 44,
-    borderRadius: 12,
+    minHeight: 52,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',

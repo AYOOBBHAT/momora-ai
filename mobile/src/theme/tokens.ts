@@ -27,6 +27,24 @@ export const spacing = {
   xxl: 48,
 } as const;
 
+export const radii = {
+  sm: 10,
+  md: 14,
+  lg: 16,
+  xl: 20,
+  full: 999,
+} as const;
+
+export const elevation = {
+  soft: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+} as const;
+
 export const typography = {
   fontSizes: {
     xs: 12,
@@ -50,6 +68,7 @@ export const typography = {
 } as const;
 
 export type Spacing = typeof spacing;
+export type Radii = typeof radii;
 export type Typography = typeof typography;
 
 export interface ThemeColors {
@@ -72,5 +91,7 @@ export interface AppTheme {
   dark: boolean;
   colors: ThemeColors;
   spacing: Spacing;
+  radii: Radii;
+  elevation: typeof elevation;
   typography: Typography;
 }

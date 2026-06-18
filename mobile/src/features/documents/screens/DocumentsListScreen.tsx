@@ -1,7 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { CompositeNavigationProp } from '@react-navigation/native';
 import { useCallback, useLayoutEffect } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -9,55 +12,58 @@ import {
   Text,
   View,
 } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { CollectionPreviewCard } from '../../../components/ui/CollectionPreviewCard';
+import { CompactDocumentCard } from '../../../components/ui/CompactDocumentCard';
+import { ContinueReadingCard } from '../../../components/ui/ContinueReadingCard';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { QuickActionsSection } from '../../../components/ui/QuickActionsSection';
+import { RecentChatCard } from '../../../components/ui/RecentChatCard';
+import { SearchBarButton } from '../../../components/ui/SearchBarButton';
+import { SectionHeader } from '../../../components/ui/SectionHeader';
 import { ErrorBanner } from '../../collections/components/ErrorBanner';
-import { PdfUploadButton } from '../components/PdfUploadButton';
-import { RecentDocumentListItem } from '../components/RecentDocumentListItem';
-import { UrlImportButton } from '../components/UrlImportButton';
-import { YoutubeImportButton } from '../components/YoutubeImportButton';
+import { useAuthMe } from '../../../hooks/queries/useAuthMe';
+import { useCollections } from '../../../hooks/queries/useCollections';
+import { useConversations } from '../../../hooks/queries/useConversations';
 import { useRecentDocuments } from '../../../hooks/queries/useDocuments';
 import { getApiErrorMessage } from '../../../lib/apiError';
-import type { DocumentsStackParamList } from '../../../navigation/types';
+import type { DocumentsStackParamList, MainTabParamList } from '../../../navigation/types';
 import { useTheme } from '../../../theme/ThemeProvider';
 
 type Props = NativeStackScreenProps<DocumentsStackParamList, 'DocumentsList'>;
 
-function SectionHeader({ title }: { title: string }) {
-  const { theme } = useTheme();
+type TabNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<DocumentsStackParamList, 'DocumentsList'>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
-  return (
-    <Text
-      style={[
-        styles.sectionTitle,
-        {
-          color: theme.colors.text,
-          fontSize: theme.typography.fontSizes.lg,
-          fontWeight: theme.typography.fontWeights.semibold,
-        },
-      ]}
-    >
-      {title}
-    </Text>
-  );
+function getGreetingName(name?: string): string {
+  if (!name?.trim()) {
+    return 'there';
+  }
+
+  return name.trim().split(/\s+/)[0] ?? 'there';
 }
 
-function SectionEmpty({ message }: { message: string }) {
+function SectionPlaceholder({ message }: { message: string }) {
   const { theme } = useTheme();
 
   return (
     <View
       style={[
-        styles.sectionEmpty,
+        styles.placeholder,
         {
           backgroundColor: theme.colors.surfaceSecondary,
           borderColor: theme.colors.border,
+          borderRadius: theme.radii.md,
         },
       ]}
     >
       <Text
         style={[
-          styles.sectionEmptyText,
+          styles.placeholderText,
           {
             color: theme.colors.textSecondary,
             fontSize: theme.typography.fontSizes.sm,
@@ -72,6 +78,10 @@ function SectionEmpty({ message }: { message: string }) {
 
 export function DocumentsListScreen({ navigation }: Props) {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
+  const tabNavigation = navigation.getParent<TabNavigationProp>();
+
+  const { data: user } = useAuthMe();
   const {
     data: recent,
     isLoading,
@@ -80,10 +90,18 @@ export function DocumentsListScreen({ navigation }: Props) {
     refetch,
     isRefetching,
   } = useRecentDocuments();
+  const { data: collections = [] } = useCollections();
+  const { data: conversations = [] } = useConversations();
 
   const recentlyViewed = recent?.recentlyViewed ?? [];
   const recentlyAdded = recent?.recentlyAdded ?? [];
-  const hasAnyDocuments = recentlyViewed.length > 0 || recentlyAdded.length > 0;
+  const recentChats = conversations.slice(0, 4);
+  const previewCollections = collections.slice(0, 8);
+  const hasAnyContent =
+    recentlyViewed.length > 0 ||
+    recentlyAdded.length > 0 ||
+    collections.length > 0 ||
+    conversations.length > 0;
 
   const handleCreatePress = useCallback(() => {
     navigation.navigate('CreateDocument');
@@ -93,21 +111,6 @@ export function DocumentsListScreen({ navigation }: Props) {
     navigation.navigate('Search');
   }, [navigation]);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Search documents and collections"
-          onPress={handleSearchPress}
-          style={({ pressed }) => [styles.headerButton, { opacity: pressed ? 0.7 : 1 }]}
-        >
-          <Ionicons name="search" size={24} color={theme.colors.primary} />
-        </Pressable>
-      ),
-    });
-  }, [navigation, handleSearchPress, theme.colors.primary]);
-
   const handleDocumentPress = useCallback(
     (documentId: string) => {
       navigation.navigate('DocumentDetail', { documentId });
@@ -115,12 +118,46 @@ export function DocumentsListScreen({ navigation }: Props) {
     [navigation],
   );
 
-  const handlePdfUploadSuccess = useCallback(
-    (documentId: string) => {
-      navigation.navigate('DocumentDetail', { documentId });
+  const handleImportSuccess = useCallback(
+    (document: { id: string }) => {
+      navigation.navigate('DocumentDetail', { documentId: document.id });
     },
     [navigation],
   );
+
+  const handleCollectionPress = useCallback(
+    (collectionId: string) => {
+      tabNavigation?.navigate('Collections', {
+        screen: 'CollectionDetail',
+        params: { collectionId },
+      });
+    },
+    [tabNavigation],
+  );
+
+  const handleChatPress = useCallback(
+    (conversationId: string) => {
+      tabNavigation?.navigate('Chat', {
+        screen: 'ChatMain',
+        params: { conversationId },
+      });
+    },
+    [tabNavigation],
+  );
+
+  const handleSeeAllCollections = useCallback(() => {
+    tabNavigation?.navigate('Collections', { screen: 'CollectionsList' });
+  }, [tabNavigation]);
+
+  const handleSeeAllChats = useCallback(() => {
+    tabNavigation?.navigate('Chat', { screen: 'ChatHistory' });
+  }, [tabNavigation]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShown: false,
+    });
+  }, [navigation]);
 
   if (isLoading) {
     return (
@@ -132,7 +169,7 @@ export function DocumentsListScreen({ navigation }: Props) {
 
   if (isError) {
     return (
-      <View style={[styles.centered, styles.padded, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.centered, styles.screenPadding, { backgroundColor: theme.colors.background }]}>
         <ErrorBanner
           message={getApiErrorMessage(error, 'Failed to load documents')}
           onRetry={() => void refetch()}
@@ -141,96 +178,16 @@ export function DocumentsListScreen({ navigation }: Props) {
     );
   }
 
-  if (!hasAnyDocuments) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <View style={[styles.centered, styles.padded]}>
-          <Text style={[styles.emptyIcon, { color: theme.colors.textSecondary }]}>📄</Text>
-          <Text
-            style={[
-              styles.emptyTitle,
-              {
-                color: theme.colors.text,
-                fontSize: theme.typography.fontSizes.lg,
-                fontWeight: theme.typography.fontWeights.semibold,
-              },
-            ]}
-          >
-            No documents yet
-          </Text>
-          <Text
-            style={[
-              styles.emptySubtitle,
-              {
-                color: theme.colors.textSecondary,
-                fontSize: theme.typography.fontSizes.md,
-              },
-            ]}
-          >
-            Add text documents, import URLs, or upload PDFs to build your knowledge base.
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={handleCreatePress}
-            style={({ pressed }) => [
-              styles.ctaButton,
-              {
-                backgroundColor: theme.colors.primary,
-                opacity: pressed ? 0.85 : 1,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.ctaText,
-                {
-                  color: theme.colors.primaryText,
-                  fontSize: theme.typography.fontSizes.md,
-                  fontWeight: theme.typography.fontWeights.semibold,
-                },
-              ]}
-            >
-              Create document
-            </Text>
-          </Pressable>
-          <PdfUploadButton
-            label="Upload PDF"
-            variant="secondary"
-            onSuccess={(document) => handlePdfUploadSuccess(document.id)}
-          />
-          <UrlImportButton
-            label="Import URL"
-            variant="secondary"
-            onSuccess={(document) => handlePdfUploadSuccess(document.id)}
-          />
-          <YoutubeImportButton
-            label="Import YouTube"
-            variant="secondary"
-            onSuccess={(document) => handlePdfUploadSuccess(document.id)}
-          />
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Create document"
-          onPress={handleCreatePress}
-          style={({ pressed }) => [
-            styles.fab,
-            {
-              backgroundColor: theme.colors.primary,
-              opacity: pressed ? 0.9 : 1,
-            },
-          ]}
-        >
-          <Ionicons name="add" size={28} color={theme.colors.primaryText} />
-        </Pressable>
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: insets.top + theme.spacing.md,
+            paddingBottom: insets.bottom + 96,
+          },
+        ]}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -238,64 +195,159 @@ export function DocumentsListScreen({ navigation }: Props) {
             onRefresh={() => void refetch()}
           />
         }
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.uploadBar}>
-          <PdfUploadButton
-            label="Upload PDF"
-            variant="secondary"
-            onSuccess={(document) => handlePdfUploadSuccess(document.id)}
-          />
-          <UrlImportButton
-            label="Import URL"
-            variant="secondary"
-            onSuccess={(document) => handlePdfUploadSuccess(document.id)}
-          />
-          <YoutubeImportButton
-            label="Import YouTube"
-            variant="secondary"
-            onSuccess={(document) => handlePdfUploadSuccess(document.id)}
-          />
+        <View style={styles.screenPadding}>
+          <View style={styles.greetingBlock}>
+            <Text
+              style={[
+                styles.greeting,
+                {
+                  color: theme.colors.text,
+                  fontSize: theme.typography.fontSizes.xl,
+                  fontWeight: theme.typography.fontWeights.bold,
+                },
+              ]}
+            >
+              Hi, {getGreetingName(user?.name)} 👋
+            </Text>
+            <Text
+              style={[
+                styles.greetingSubtitle,
+                {
+                  color: theme.colors.textSecondary,
+                  fontSize: theme.typography.fontSizes.md,
+                },
+              ]}
+            >
+              What do you want to explore today?
+            </Text>
+          </View>
+
+          <SearchBarButton onPress={handleSearchPress} />
         </View>
 
+        <View style={[styles.section, styles.screenPadding]}>
+          <SectionHeader title="Quick Actions" />
+          <QuickActionsSection onImportSuccess={handleImportSuccess} onNotePress={handleCreatePress} />
+        </View>
+
+        {!hasAnyContent ? (
+          <View style={styles.screenPadding}>
+            <EmptyState
+              actionLabel="Create document"
+              icon="📄"
+              subtitle="Add text documents, import URLs, or upload PDFs to build your knowledge base."
+              title="No documents yet"
+              onActionPress={handleCreatePress}
+            />
+          </View>
+        ) : null}
+
         <View style={styles.section}>
-          <SectionHeader title="Recently Viewed" />
+          <View style={styles.screenPadding}>
+            <SectionHeader title="Continue Reading" />
+          </View>
           {recentlyViewed.length === 0 ? (
-            <SectionEmpty message="Open a document to see it here." />
+            <View style={styles.screenPadding}>
+              <SectionPlaceholder message="Open a document to pick up where you left off." />
+            </View>
           ) : (
-            recentlyViewed.map((document) => (
-              <RecentDocumentListItem
-                key={document.id}
-                document={document}
-                onPress={() => handleDocumentPress(document.id)}
-              />
-            ))
+            <FlatList
+              horizontal
+              data={recentlyViewed}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.horizontalList}
+              renderItem={({ item }) => (
+                <ContinueReadingCard
+                  document={item}
+                  onPress={() => handleDocumentPress(item.id)}
+                />
+              )}
+              showsHorizontalScrollIndicator={false}
+            />
           )}
         </View>
 
         <View style={styles.section}>
-          <SectionHeader title="Recently Added" />
-          {recentlyAdded.length === 0 ? (
-            <SectionEmpty message="New documents will appear here." />
+          <View style={styles.screenPadding}>
+            <SectionHeader
+              actionLabel={collections.length > 0 ? 'See all' : undefined}
+              title="Collections"
+              onActionPress={collections.length > 0 ? handleSeeAllCollections : undefined}
+            />
+          </View>
+          {previewCollections.length === 0 ? (
+            <View style={styles.screenPadding}>
+              <SectionPlaceholder message="Create a collection to organize your documents." />
+            </View>
           ) : (
-            recentlyAdded.map((document) => (
-              <RecentDocumentListItem
-                key={document.id}
-                document={document}
-                onPress={() => handleDocumentPress(document.id)}
-              />
-            ))
+            <FlatList
+              horizontal
+              data={previewCollections}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.horizontalList}
+              renderItem={({ item }) => (
+                <CollectionPreviewCard
+                  collection={item}
+                  onPress={() => handleCollectionPress(item.id)}
+                />
+              )}
+              showsHorizontalScrollIndicator={false}
+            />
+          )}
+        </View>
+
+        <View style={[styles.section, styles.screenPadding]}>
+          <SectionHeader
+            actionLabel={conversations.length > 0 ? 'See all' : undefined}
+            title="Recent Chats"
+            onActionPress={conversations.length > 0 ? handleSeeAllChats : undefined}
+          />
+          {recentChats.length === 0 ? (
+            <SectionPlaceholder message="Start a chat and your questions will appear here." />
+          ) : (
+            <View style={styles.chatList}>
+              {recentChats.map((conversation) => (
+                <RecentChatCard
+                  key={conversation.id}
+                  conversation={conversation}
+                  onPress={() => handleChatPress(conversation.id)}
+                />
+              ))}
+            </View>
+          )}
+        </View>
+
+        <View style={[styles.section, styles.screenPadding]}>
+          <SectionHeader title="Recent Documents" />
+          {recentlyAdded.length === 0 ? (
+            <SectionPlaceholder message="New documents will appear here." />
+          ) : (
+            <View style={styles.documentList}>
+              {recentlyAdded.map((document) => (
+                <CompactDocumentCard
+                  key={document.id}
+                  document={document}
+                  onPress={() => handleDocumentPress(document.id)}
+                />
+              ))}
+            </View>
           )}
         </View>
       </ScrollView>
+
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Create document"
         onPress={handleCreatePress}
         style={({ pressed }) => [
           styles.fab,
+          theme.elevation.soft,
           {
             backgroundColor: theme.colors.primary,
             opacity: pressed ? 0.9 : 1,
+            transform: [{ scale: pressed ? 0.96 : 1 }],
           },
         ]}
       >
@@ -309,60 +361,46 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  headerButton: {
-    padding: 4,
-    marginRight: 4,
-  },
-  uploadBar: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    gap: 8,
-  },
-  scrollContent: {
-    paddingBottom: 96,
-  },
-  section: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    gap: 12,
-  },
-  sectionTitle: {},
-  sectionEmpty: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 16,
-  },
-  sectionEmptyText: {
-    textAlign: 'center',
-  },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  padded: {
-    padding: 24,
+  screenPadding: {
+    paddingHorizontal: 16,
   },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 8,
+  scrollContent: {
+    gap: 24,
   },
-  emptyTitle: {
+  greetingBlock: {
+    gap: 4,
+    marginBottom: 16,
+  },
+  greeting: {
+    letterSpacing: -0.3,
+  },
+  greetingSubtitle: {
+    lineHeight: 22,
+  },
+  section: {
+    gap: 0,
+  },
+  horizontalList: {
+    paddingHorizontal: 16,
+  },
+  placeholder: {
+    borderWidth: 1,
+    padding: 16,
+  },
+  placeholderText: {
     textAlign: 'center',
   },
-  emptySubtitle: {
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 20,
+  chatList: {
+    gap: 8,
   },
-  ctaButton: {
-    minHeight: 48,
-    borderRadius: 12,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+  documentList: {
+    gap: 8,
   },
-  ctaText: {},
   fab: {
     position: 'absolute',
     right: 20,
@@ -372,10 +410,5 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
 });

@@ -13,6 +13,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { CollectionCard } from '../components/CollectionCard';
 import { ErrorBanner } from '../components/ErrorBanner';
+import { EmptyState } from '../../../components/ui/EmptyState';
 import { useCollections } from '../../../hooks/queries/useCollections';
 import { getApiErrorMessage } from '../../../lib/apiError';
 import type { CollectionsStackParamList } from '../../../navigation/types';
@@ -66,54 +67,13 @@ export function CollectionsListScreen({ navigation }: Props) {
   if (collections.length === 0) {
     return (
       <View style={[styles.centered, styles.padded, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.emptyIcon, { color: theme.colors.textSecondary }]}>📁</Text>
-        <Text
-          style={[
-            styles.emptyTitle,
-            {
-              color: theme.colors.text,
-              fontSize: theme.typography.fontSizes.lg,
-              fontWeight: theme.typography.fontWeights.semibold,
-            },
-          ]}
-        >
-          No collections yet
-        </Text>
-        <Text
-          style={[
-            styles.emptySubtitle,
-            {
-              color: theme.colors.textSecondary,
-              fontSize: theme.typography.fontSizes.md,
-            },
-          ]}
-        >
-          Organize your documents into collections.
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          onPress={handleCreatePress}
-          style={({ pressed }) => [
-            styles.ctaButton,
-            {
-              backgroundColor: theme.colors.primary,
-              opacity: pressed ? 0.85 : 1,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.ctaText,
-              {
-                color: theme.colors.primaryText,
-                fontSize: theme.typography.fontSizes.md,
-                fontWeight: theme.typography.fontWeights.semibold,
-              },
-            ]}
-          >
-            Create collection
-          </Text>
-        </Pressable>
+        <EmptyState
+          actionLabel="Create collection"
+          icon="📁"
+          subtitle="Organize your documents into collections."
+          title="No collections yet"
+          onActionPress={handleCreatePress}
+        />
       </View>
     );
   }
@@ -177,26 +137,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 8,
-  },
-  emptyTitle: {
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 20,
-  },
-  ctaButton: {
-    minHeight: 48,
-    borderRadius: 12,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaText: {},
   fab: {
     position: 'absolute',
     right: 20,

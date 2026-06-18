@@ -27,7 +27,7 @@ export function DocumentsStack() {
       <Stack.Screen
         name="DocumentsList"
         component={DocumentsListScreen}
-        options={{ title: 'Documents' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Search"

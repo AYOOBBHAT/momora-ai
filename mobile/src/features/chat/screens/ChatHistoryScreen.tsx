@@ -15,6 +15,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { ConversationListItem } from '../../../api/types';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { RecentChatCard } from '../../../components/ui/RecentChatCard';
 import { ErrorBanner } from '../../collections/components/ErrorBanner';
 import { useDeleteConversation } from '../../../hooks/mutations/useDeleteConversation';
 import {
@@ -31,30 +33,6 @@ import {
 import { useTheme } from '../../../theme/ThemeProvider';
 
 type Props = NativeStackScreenProps<ChatStackParamList, 'ChatHistory'>;
-
-function formatRelativeTime(isoDate: string): string {
-  const date = new Date(isoDate);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMinutes = Math.floor(diffMs / 60_000);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffMinutes < 1) {
-    return 'Just now';
-  }
-  if (diffMinutes < 60) {
-    return `${diffMinutes}m ago`;
-  }
-  if (diffHours < 24) {
-    return `${diffHours}h ago`;
-  }
-  if (diffDays < 7) {
-    return `${diffDays}d ago`;
-  }
-
-  return date.toLocaleDateString();
-}
 
 export function ChatHistoryScreen({ navigation }: Props) {
   const { theme } = useTheme();
@@ -122,81 +100,24 @@ export function ChatHistoryScreen({ navigation }: Props) {
 
   const renderItem = useCallback(
     ({ item }: { item: ConversationListItem }) => (
-      <Pressable
-        accessibilityRole="button"
-        onLongPress={() => confirmDelete(item)}
-        onPress={() => handleOpenConversation(item)}
-        style={({ pressed }) => [
-          styles.row,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.border,
-            opacity: pressed ? 0.85 : 1,
-          },
-        ]}
-      >
-        <View style={styles.rowContent}>
-          <Text
-            numberOfLines={1}
-            style={[
-              styles.title,
-              {
-                color: theme.colors.text,
-                fontSize: theme.typography.fontSizes.md,
-                fontWeight: theme.typography.fontWeights.semibold,
-              },
-            ]}
-          >
-            {item.title || 'Untitled chat'}
-          </Text>
-          <Text
-            numberOfLines={2}
-            style={[
-              styles.preview,
-              {
-                color: theme.colors.textSecondary,
-                fontSize: theme.typography.fontSizes.sm,
-              },
-            ]}
-          >
-            {item.preview || 'No messages yet'}
-          </Text>
-          <Text
-            style={[
-              styles.meta,
-              {
-                color: theme.colors.textSecondary,
-                fontSize: theme.typography.fontSizes.xs,
-              },
-            ]}
-          >
-            {formatRelativeTime(item.updatedAt)} · {item.messageCount}{' '}
-            {item.messageCount === 1 ? 'message' : 'messages'}
-          </Text>
-        </View>
+      <View style={styles.rowWrap}>
+        <RecentChatCard
+          conversation={item}
+          style={styles.rowCard}
+          onPress={() => handleOpenConversation(item)}
+        />
         <Pressable
           accessibilityLabel="Delete conversation"
           accessibilityRole="button"
           hitSlop={8}
           onPress={() => confirmDelete(item)}
-          style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1, padding: 4 }]}
+          style={({ pressed }) => [styles.deleteButton, { opacity: pressed ? 0.6 : 1 }]}
         >
-          <Ionicons color={theme.colors.textSecondary} name="trash-outline" size={20} />
+          <Ionicons color={theme.colors.textSecondary} name="trash-outline" size={18} />
         </Pressable>
-      </Pressable>
+      </View>
     ),
-    [
-      confirmDelete,
-      handleOpenConversation,
-      theme.colors.border,
-      theme.colors.surface,
-      theme.colors.text,
-      theme.colors.textSecondary,
-      theme.typography.fontSizes.md,
-      theme.typography.fontSizes.sm,
-      theme.typography.fontSizes.xs,
-      theme.typography.fontWeights.semibold,
-    ],
+    [confirmDelete, handleOpenConversation, theme.colors.textSecondary],
   );
 
   const showInitialLoading = activeQuery.isLoading && conversations.length === 0;
@@ -219,6 +140,7 @@ export function ChatHistoryScreen({ navigation }: Props) {
           {
             backgroundColor: theme.colors.surface,
             borderColor: theme.colors.border,
+            borderRadius: theme.radii.xl,
           },
         ]}
       >
@@ -280,32 +202,11 @@ export function ChatHistoryScreen({ navigation }: Props) {
       ) : null}
 
       {showEmpty ? (
-        <View style={[styles.centered, styles.padded]}>
-          <Text style={[styles.emptyIcon, { color: theme.colors.textSecondary }]}>🕘</Text>
-          <Text
-            style={[
-              styles.emptyTitle,
-              {
-                color: theme.colors.text,
-                fontSize: theme.typography.fontSizes.lg,
-                fontWeight: theme.typography.fontWeights.semibold,
-              },
-            ]}
-          >
-            {emptyTitle}
-          </Text>
-          <Text
-            style={[
-              styles.emptySubtitle,
-              {
-                color: theme.colors.textSecondary,
-                fontSize: theme.typography.fontSizes.md,
-              },
-            ]}
-          >
-            {emptySubtitle}
-          </Text>
-        </View>
+        <EmptyState
+          icon="🕘"
+          subtitle={emptySubtitle}
+          title={emptyTitle}
+        />
       ) : null}
 
       {!showInitialLoading && !showError && conversations.length > 0 ? (
@@ -340,14 +241,13 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     alignItems: 'center',
-    borderBottomWidth: 1,
+    borderWidth: 1,
     flexDirection: 'row',
     gap: 8,
     marginHorizontal: 16,
     marginTop: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   searchInput: {
     flex: 1,
@@ -370,38 +270,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   listContent: {
-    gap: 10,
+    gap: 8,
     padding: 16,
     paddingBottom: 24,
   },
-  row: {
-    alignItems: 'center',
-    borderRadius: 14,
-    borderWidth: 1,
+  rowWrap: {
     flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  rowContent: {
-    flex: 1,
+    alignItems: 'center',
     gap: 4,
   },
-  title: {},
-  preview: {
-    lineHeight: 20,
+  rowCard: {
+    flex: 1,
   },
-  meta: {},
-  emptyIcon: {
-    fontSize: 40,
-    marginBottom: 8,
-  },
-  emptyTitle: {
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    lineHeight: 22,
-    textAlign: 'center',
+  deleteButton: {
+    padding: 8,
+    marginRight: -4,
   },
 });
