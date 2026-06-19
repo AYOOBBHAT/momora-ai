@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { forwardRef } from 'react';
+import { Pressable, StyleSheet, TextInput, View, type TextInput as TextInputType } from 'react-native';
 
 import { useTheme } from '../../../theme/ThemeProvider';
 
@@ -9,15 +10,22 @@ interface ChatInputProps {
   onSend: () => void;
   disabled?: boolean;
   placeholder?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
-export function ChatInput({
+export const ChatInput = forwardRef<TextInputType, ChatInputProps>(function ChatInput(
+  {
   value,
   onChangeText,
   onSend,
   disabled = false,
   placeholder = 'Ask a question…',
-}: ChatInputProps) {
+  onFocus,
+  onBlur,
+  },
+  ref,
+) {
   const { theme } = useTheme();
   const trimmed = value.trim();
   const canSend = trimmed.length > 0 && !disabled;
@@ -33,15 +41,18 @@ export function ChatInput({
       ]}
     >
       <TextInput
+        ref={ref}
         editable={!disabled}
         multiline
+        onBlur={onBlur}
         onChangeText={onChangeText}
+        onFocus={onFocus}
         placeholder={placeholder}
         placeholderTextColor={theme.colors.textSecondary}
         style={[
           styles.input,
           {
-            backgroundColor: theme.colors.surfaceSecondary,
+            backgroundColor: theme.colors.surfaceElevated,
             borderColor: theme.colors.border,
             color: theme.colors.text,
             fontSize: theme.typography.fontSizes.md,
@@ -70,32 +81,33 @@ export function ChatInput({
       </Pressable>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
     alignItems: 'flex-end',
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
   },
   input: {
-    borderRadius: 20,
+    borderRadius: 22,
     borderWidth: 1,
     flex: 1,
     maxHeight: 120,
-    minHeight: 44,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 10,
+    minHeight: 46,
+    paddingHorizontal: 18,
+    paddingTop: 11,
+    paddingBottom: 11,
   },
   sendButton: {
     alignItems: 'center',
-    borderRadius: 22,
-    height: 44,
+    borderRadius: 23,
+    height: 46,
     justifyContent: 'center',
-    width: 44,
+    width: 46,
   },
 });

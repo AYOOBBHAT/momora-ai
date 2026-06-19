@@ -10,6 +10,7 @@ export const lightTheme: AppTheme = {
     background: palette.slate50,
     surface: palette.white,
     surfaceSecondary: palette.slate100,
+    surfaceElevated: palette.white,
     text: palette.slate900,
     textSecondary: palette.slate500,
     border: palette.slate200,

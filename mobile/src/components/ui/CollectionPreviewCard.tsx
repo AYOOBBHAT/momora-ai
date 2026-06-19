@@ -1,18 +1,25 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { SafeCollection } from '../../api/types';
-import { DEFAULT_COLLECTION_COLOR, DEFAULT_COLLECTION_ICON } from '../../features/collections/constants';
+import { DEFAULT_COLLECTION_COLOR } from '../../features/collections/constants';
+import { CollectionIconDisplay } from '../../features/collections/components/CollectionIconDisplay';
+import { formatRelativeTime } from '../../features/documents/utils/formatDocument';
 import { useTheme } from '../../theme/ThemeProvider';
 
 interface CollectionPreviewCardProps {
   collection: SafeCollection;
+  documentCount?: number;
   onPress: () => void;
 }
 
-export function CollectionPreviewCard({ collection, onPress }: CollectionPreviewCardProps) {
+export function CollectionPreviewCard({
+  collection,
+  documentCount = 0,
+  onPress,
+}: CollectionPreviewCardProps) {
   const { theme } = useTheme();
   const accentColor = collection.color ?? DEFAULT_COLLECTION_COLOR;
-  const icon = collection.icon ?? DEFAULT_COLLECTION_ICON;
+  const countLabel = documentCount === 1 ? '1 document' : `${documentCount} documents`;
 
   return (
     <Pressable
@@ -22,8 +29,8 @@ export function CollectionPreviewCard({ collection, onPress }: CollectionPreview
         styles.card,
         theme.elevation.soft,
         {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.surfaceElevated,
+          borderColor: `${theme.colors.border}AA`,
           borderRadius: theme.radii.lg,
           opacity: pressed ? 0.92 : 1,
           transform: [{ scale: pressed ? 0.98 : 1 }],
@@ -32,14 +39,23 @@ export function CollectionPreviewCard({ collection, onPress }: CollectionPreview
     >
       <View
         style={[
+          styles.gradient,
+          {
+            backgroundColor: `${accentColor}18`,
+            borderRadius: theme.radii.lg,
+          },
+        ]}
+      />
+      <View
+        style={[
           styles.iconWrap,
           {
-            backgroundColor: `${accentColor}22`,
+            backgroundColor: `${accentColor}28`,
             borderRadius: theme.radii.md,
           },
         ]}
       >
-        <Text style={styles.icon}>{icon}</Text>
+        <CollectionIconDisplay icon={collection.icon} size={22} />
       </View>
       <Text
         numberOfLines={2}
@@ -54,20 +70,29 @@ export function CollectionPreviewCard({ collection, onPress }: CollectionPreview
       >
         {collection.name}
       </Text>
-      {collection.description ? (
-        <Text
-          numberOfLines={1}
-          style={[
-            styles.description,
-            {
-              color: theme.colors.textSecondary,
-              fontSize: theme.typography.fontSizes.xs,
-            },
-          ]}
-        >
-          {collection.description}
-        </Text>
-      ) : null}
+      <Text
+        style={[
+          styles.meta,
+          {
+            color: theme.colors.textSecondary,
+            fontSize: theme.typography.fontSizes.xs,
+          },
+        ]}
+      >
+        {countLabel}
+      </Text>
+      <Text
+        style={[
+          styles.meta,
+          {
+            color: theme.colors.textSecondary,
+            fontSize: theme.typography.fontSizes.xs,
+          },
+        ]}
+      >
+        Updated {formatRelativeTime(collection.updatedAt).toLowerCase()}
+      </Text>
+      <View style={[styles.accentDot, { backgroundColor: accentColor }]} />
     </Pressable>
   );
 }
@@ -75,22 +100,39 @@ export function CollectionPreviewCard({ collection, onPress }: CollectionPreview
 const styles = StyleSheet.create({
   card: {
     width: 132,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     padding: 14,
-    gap: 10,
+    gap: 4,
     marginRight: 12,
+    overflow: 'hidden',
+  },
+  gradient: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    opacity: 0.55,
   },
   iconWrap: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  icon: {
-    fontSize: 22,
+    marginBottom: 4,
   },
   name: {
     lineHeight: 18,
   },
-  description: {},
+  meta: {
+    lineHeight: 16,
+  },
+  accentDot: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
 });

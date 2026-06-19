@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { SafeCollection } from '../../../api/types';
-import { DEFAULT_COLLECTION_COLOR, DEFAULT_COLLECTION_ICON } from '../constants';
+import { DEFAULT_COLLECTION_COLOR } from '../constants';
+import { CollectionIconDisplay } from './CollectionIconDisplay';
 import { useTheme } from '../../../theme/ThemeProvider';
 
 interface CollectionCardProps {
@@ -12,7 +13,6 @@ interface CollectionCardProps {
 export function CollectionCard({ collection, onPress }: CollectionCardProps) {
   const { theme } = useTheme();
   const accentColor = collection.color ?? DEFAULT_COLLECTION_COLOR;
-  const icon = collection.icon ?? DEFAULT_COLLECTION_ICON;
 
   return (
     <Pressable
@@ -22,8 +22,8 @@ export function CollectionCard({ collection, onPress }: CollectionCardProps) {
         styles.card,
         theme.elevation.soft,
         {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.surfaceElevated,
+          borderColor: `${theme.colors.border}AA`,
           borderRadius: theme.radii.lg,
           opacity: pressed ? 0.92 : 1,
           transform: [{ scale: pressed ? 0.99 : 1 }],
@@ -39,7 +39,7 @@ export function CollectionCard({ collection, onPress }: CollectionCardProps) {
           },
         ]}
       >
-        <Text style={styles.icon}>{icon}</Text>
+        <CollectionIconDisplay icon={collection.icon} size={24} />
       </View>
       <View style={styles.textBlock}>
         <Text
@@ -88,9 +88,6 @@ const styles = StyleSheet.create({
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  icon: {
-    fontSize: 24,
   },
   textBlock: {
     flex: 1,

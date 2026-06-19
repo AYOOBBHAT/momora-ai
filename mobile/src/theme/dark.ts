@@ -10,6 +10,7 @@ export const darkTheme: AppTheme = {
     background: palette.slate950,
     surface: palette.slate900,
     surfaceSecondary: palette.slate800,
+    surfaceElevated: '#162033',
     text: palette.slate50,
     textSecondary: palette.slate400,
     border: palette.slate700,

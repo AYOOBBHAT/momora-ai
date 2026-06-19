@@ -23,8 +23,27 @@ export function EmptyState({
   const { theme } = useTheme();
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.icon, { color: theme.colors.textSecondary }]}>{icon}</Text>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.colors.surfaceElevated,
+          borderColor: theme.colors.border,
+          borderRadius: theme.radii.lg,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.iconWrap,
+          {
+            backgroundColor: `${theme.colors.primary}14`,
+            borderRadius: theme.radii.full,
+          },
+        ]}
+      >
+        <Text style={styles.icon}>{icon}</Text>
+      </View>
       <Text
         style={[
           styles.title,
@@ -42,7 +61,7 @@ export function EmptyState({
           styles.subtitle,
           {
             color: theme.colors.textSecondary,
-            fontSize: theme.typography.fontSizes.md,
+            fontSize: theme.typography.fontSizes.sm,
           },
         ]}
       >
@@ -54,10 +73,12 @@ export function EmptyState({
           onPress={onActionPress}
           style={({ pressed }) => [
             styles.button,
+            theme.elevation.soft,
             {
               backgroundColor: theme.colors.primary,
               borderRadius: theme.radii.md,
               opacity: pressed ? 0.88 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
             },
           ]}
         >
@@ -66,7 +87,7 @@ export function EmptyState({
               styles.buttonText,
               {
                 color: theme.colors.primaryText,
-                fontSize: theme.typography.fontSizes.md,
+                fontSize: theme.typography.fontSizes.sm,
                 fontWeight: theme.typography.fontWeights.semibold,
               },
             ]}
@@ -83,25 +104,32 @@ export function EmptyState({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 28,
+    paddingHorizontal: 20,
     gap: 8,
   },
-  icon: {
-    fontSize: 44,
+  iconWrap: {
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 4,
+  },
+  icon: {
+    fontSize: 28,
   },
   title: {
     textAlign: 'center',
   },
   subtitle: {
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 21,
     marginBottom: 8,
   },
   button: {
-    minHeight: 48,
-    paddingHorizontal: 24,
+    minHeight: 44,
+    paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,

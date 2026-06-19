@@ -20,6 +20,7 @@ export function SectionHeader({ title, actionLabel, onActionPress }: SectionHead
             color: theme.colors.text,
             fontSize: theme.typography.fontSizes.lg,
             fontWeight: theme.typography.fontWeights.semibold,
+            letterSpacing: -0.2,
           },
         ]}
       >

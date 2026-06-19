@@ -9,7 +9,10 @@ export const COLLECTION_COLORS = [
   '#64748B',
 ] as const;
 
-export const COLLECTION_ICONS = ['📁', '📚', '💡', '⭐', '🎯', '📝', '🔖', '💼'] as const;
+export {
+  COLLECTION_ICON_OPTIONS,
+  COLLECTION_ICONS,
+  DEFAULT_COLLECTION_ICON,
+} from './utils/collectionIcon';
 
 export const DEFAULT_COLLECTION_COLOR = COLLECTION_COLORS[0];
-export const DEFAULT_COLLECTION_ICON = COLLECTION_ICONS[0];

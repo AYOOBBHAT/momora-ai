@@ -1,17 +1,17 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { RecentDocumentItem } from '../../api/types';
-import { formatRelativeTime } from '../../features/documents/utils/formatDocument';
-import { useTheme } from '../../theme/ThemeProvider';
-import { DocumentThumbnail } from './DocumentThumbnail';
-import { SourceBadge } from './SourceBadge';
+import type { SafeDocument } from '../../../api/types';
+import { DocumentThumbnail } from '../../../components/ui/DocumentThumbnail';
+import { SourceBadge } from '../../../components/ui/SourceBadge';
+import { formatRelativeTime } from '../../documents/utils/formatDocument';
+import { useTheme } from '../../../theme/ThemeProvider';
 
-interface CompactDocumentCardProps {
-  document: RecentDocumentItem;
+interface CollectionDocumentRowProps {
+  document: SafeDocument;
   onPress?: () => void;
 }
 
-export function CompactDocumentCard({ document, onPress }: CompactDocumentCardProps) {
+export function CollectionDocumentRow({ document, onPress }: CollectionDocumentRowProps) {
   const { theme } = useTheme();
 
   return (
@@ -25,16 +25,16 @@ export function CompactDocumentCard({ document, onPress }: CompactDocumentCardPr
         {
           backgroundColor: theme.colors.surfaceElevated,
           borderColor: `${theme.colors.border}AA`,
-          borderRadius: theme.radii.md,
-          opacity: onPress && pressed ? 0.9 : 1,
-          transform: [{ scale: onPress && pressed ? 0.99 : 1 }],
+          borderRadius: theme.radii.lg,
+          opacity: onPress && pressed ? 0.92 : 1,
+          transform: [{ scale: onPress && pressed ? 0.995 : 1 }],
         },
       ]}
     >
       <DocumentThumbnail size="md" sourceType={document.sourceType} />
       <View style={styles.content}>
         <Text
-          numberOfLines={1}
+          numberOfLines={2}
           style={[
             styles.title,
             {
@@ -48,20 +48,6 @@ export function CompactDocumentCard({ document, onPress }: CompactDocumentCardPr
         </Text>
         <View style={styles.metaRow}>
           <SourceBadge sourceType={document.sourceType} />
-          {document.collectionName ? (
-            <Text
-              numberOfLines={1}
-              style={[
-                styles.collection,
-                {
-                  color: theme.colors.textSecondary,
-                  fontSize: theme.typography.fontSizes.xs,
-                },
-              ]}
-            >
-              {document.collectionName}
-            </Text>
-          ) : null}
         </View>
       </View>
       <Text
@@ -81,28 +67,25 @@ export function CompactDocumentCard({ document, onPress }: CompactDocumentCardPr
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
     borderWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    gap: 12,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 13,
   },
   content: {
     flex: 1,
     gap: 6,
   },
   title: {
-    lineHeight: 18,
+    lineHeight: 19,
   },
   metaRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    flexDirection: 'row',
     flexWrap: 'wrap',
-  },
-  collection: {
-    flexShrink: 1,
+    gap: 8,
   },
   time: {
     alignSelf: 'flex-start',

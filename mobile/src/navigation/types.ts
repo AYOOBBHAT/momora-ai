@@ -21,6 +21,7 @@ export type ChatStackParamList = {
         initialMessage?: string;
         autoSend?: boolean;
         collectionId?: string;
+        focusInput?: boolean;
       }
     | undefined;
   ChatHistory: undefined;

@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { ConversationListItem } from '../../../api/types';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { RecentChatCard } from '../../../components/ui/RecentChatCard';
+import { Skeleton } from '../../../components/ui/Skeleton';
 import { ErrorBanner } from '../../collections/components/ErrorBanner';
 import { useDeleteConversation } from '../../../hooks/mutations/useDeleteConversation';
 import {
@@ -138,8 +139,8 @@ export function ChatHistoryScreen({ navigation }: Props) {
         style={[
           styles.searchBar,
           {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.border,
+          backgroundColor: theme.colors.surfaceElevated,
+          borderColor: `${theme.colors.border}99`,
             borderRadius: theme.radii.xl,
           },
         ]}
@@ -187,8 +188,10 @@ export function ChatHistoryScreen({ navigation }: Props) {
       ) : null}
 
       {showInitialLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color={theme.colors.primary} size="large" />
+        <View style={styles.skeletonWrap}>
+          <Skeleton borderRadius={theme.radii.md} height={72} style={{ marginBottom: 10 }} />
+          <Skeleton borderRadius={theme.radii.md} height={72} style={{ marginBottom: 10 }} />
+          <Skeleton borderRadius={theme.radii.md} height={72} />
         </View>
       ) : null}
 
@@ -203,7 +206,7 @@ export function ChatHistoryScreen({ navigation }: Props) {
 
       {showEmpty ? (
         <EmptyState
-          icon="🕘"
+          icon="💬"
           subtitle={emptySubtitle}
           title={emptyTitle}
         />
@@ -260,6 +263,9 @@ const styles = StyleSheet.create({
   hint: {
     paddingHorizontal: 16,
     paddingTop: 12,
+  },
+  skeletonWrap: {
+    padding: 16,
   },
   centered: {
     alignItems: 'center',

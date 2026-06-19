@@ -16,6 +16,7 @@ type QuickActionId = 'pdf' | 'url' | 'youtube' | 'note';
 interface QuickActionConfig {
   id: QuickActionId;
   label: string;
+  description: string;
   icon: IoniconName;
   accent: string;
   background: string;
@@ -25,30 +26,34 @@ const ACTIONS: QuickActionConfig[] = [
   {
     id: 'pdf',
     label: 'PDF',
+    description: 'Chat with documents',
     icon: 'document-text-outline',
     accent: '#F87171',
-    background: 'rgba(248, 113, 113, 0.12)',
+    background: 'rgba(248, 113, 113, 0.14)',
   },
   {
     id: 'url',
     label: 'Website',
+    description: 'Save articles',
     icon: 'globe-outline',
     accent: '#38BDF8',
-    background: 'rgba(56, 189, 248, 0.12)',
+    background: 'rgba(56, 189, 248, 0.14)',
   },
   {
     id: 'youtube',
     label: 'YouTube',
+    description: 'Import transcripts',
     icon: 'logo-youtube',
     accent: '#EF4444',
-    background: 'rgba(239, 68, 68, 0.12)',
+    background: 'rgba(239, 68, 68, 0.14)',
   },
   {
     id: 'note',
     label: 'Add Note',
-    icon: 'scan-outline',
+    description: 'Capture ideas instantly',
+    icon: 'create-outline',
     accent: '#A78BFA',
-    background: 'rgba(167, 139, 250, 0.12)',
+    background: 'rgba(167, 139, 250, 0.14)',
   },
 ];
 
@@ -86,8 +91,8 @@ export function QuickActionsSection({ onNotePress, onImportSuccess }: QuickActio
                 styles.tile,
                 theme.elevation.soft,
                 {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: isActive ? action.accent : theme.colors.border,
+                  backgroundColor: theme.colors.surfaceElevated,
+                  borderColor: isActive ? action.accent : `${theme.colors.border}AA`,
                   borderRadius: theme.radii.lg,
                   opacity: pressed ? 0.92 : 1,
                   transform: [{ scale: pressed ? 0.98 : 1 }],
@@ -103,7 +108,7 @@ export function QuickActionsSection({ onNotePress, onImportSuccess }: QuickActio
                   },
                 ]}
               >
-                <Ionicons color={action.accent} name={action.icon} size={22} />
+                <Ionicons color={action.accent} name={action.icon} size={28} />
               </View>
               <Text
                 style={[
@@ -116,6 +121,18 @@ export function QuickActionsSection({ onNotePress, onImportSuccess }: QuickActio
                 ]}
               >
                 {action.label}
+              </Text>
+              <Text
+                numberOfLines={2}
+                style={[
+                  styles.description,
+                  {
+                    color: theme.colors.textSecondary,
+                    fontSize: theme.typography.fontSizes.xs,
+                  },
+                ]}
+              >
+                {action.description}
               </Text>
             </Pressable>
           );
@@ -155,19 +172,25 @@ const styles = StyleSheet.create({
   tile: {
     width: '47%',
     flexGrow: 1,
-    borderWidth: 1,
-    padding: 16,
-    gap: 12,
-    minHeight: 96,
-    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    gap: 6,
+    minHeight: 118,
   },
   iconWrap: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 2,
   },
-  label: {},
+  label: {
+    lineHeight: 18,
+  },
+  description: {
+    lineHeight: 16,
+  },
   panel: {
     marginTop: 4,
   },

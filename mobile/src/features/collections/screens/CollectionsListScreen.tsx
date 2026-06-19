@@ -1,12 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useLayoutEffect } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -14,6 +12,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CollectionCard } from '../components/CollectionCard';
 import { ErrorBanner } from '../components/ErrorBanner';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { Skeleton } from '../../../components/ui/Skeleton';
 import { useCollections } from '../../../hooks/queries/useCollections';
 import { getApiErrorMessage } from '../../../lib/apiError';
 import type { CollectionsStackParamList } from '../../../navigation/types';
@@ -47,8 +46,10 @@ export function CollectionsListScreen({ navigation }: Props) {
 
   if (isLoading) {
     return (
-      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator color={theme.colors.primary} size="large" />
+      <View style={[styles.container, styles.padded, { backgroundColor: theme.colors.background }]}>
+        <Skeleton borderRadius={theme.radii.lg} height={88} style={{ marginBottom: 12 }} />
+        <Skeleton borderRadius={theme.radii.lg} height={88} style={{ marginBottom: 12 }} />
+        <Skeleton borderRadius={theme.radii.lg} height={88} />
       </View>
     );
   }
@@ -70,8 +71,8 @@ export function CollectionsListScreen({ navigation }: Props) {
         <EmptyState
           actionLabel="Create collection"
           icon="📁"
-          subtitle="Organize your documents into collections."
-          title="No collections yet"
+          subtitle="Group notes, PDFs, and imports into focused spaces."
+          title="Organize your knowledge"
           onActionPress={handleCreatePress}
         />
       </View>
@@ -104,9 +105,11 @@ export function CollectionsListScreen({ navigation }: Props) {
         onPress={handleCreatePress}
         style={({ pressed }) => [
           styles.fab,
+          theme.elevation.fab,
           {
             backgroundColor: theme.colors.primary,
-            opacity: pressed ? 0.9 : 1,
+            opacity: pressed ? 0.92 : 1,
+            transform: [{ scale: pressed ? 0.96 : 1 }],
           },
         ]}
       >
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   padded: {
-    padding: 24,
+    padding: 16,
   },
   listContent: {
     padding: 16,
@@ -141,15 +144,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
 });

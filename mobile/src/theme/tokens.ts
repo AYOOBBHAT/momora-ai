@@ -39,9 +39,16 @@ export const elevation = {
   soft: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
+    shadowOpacity: 0.14,
+    shadowRadius: 10,
     elevation: 3,
+  },
+  fab: {
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 8,
   },
 } as const;
 
@@ -75,6 +82,7 @@ export interface ThemeColors {
   background: string;
   surface: string;
   surfaceSecondary: string;
+  surfaceElevated: string;
   text: string;
   textSecondary: string;
   border: string;

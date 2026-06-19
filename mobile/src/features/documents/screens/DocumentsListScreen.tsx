@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { CompositeNavigationProp } from '@react-navigation/native';
-import { useCallback, useLayoutEffect } from 'react';
+import { useCallback, useLayoutEffect, useMemo } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
@@ -15,19 +14,20 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { AskMemoraSection, type AskMemoraOpenParams } from '../../../components/ui/AskMemoraSection';
 import { CollectionPreviewCard } from '../../../components/ui/CollectionPreviewCard';
 import { CompactDocumentCard } from '../../../components/ui/CompactDocumentCard';
 import { ContinueReadingCard } from '../../../components/ui/ContinueReadingCard';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { HomeScreenSkeleton } from '../../../components/ui/HomeScreenSkeleton';
 import { QuickActionsSection } from '../../../components/ui/QuickActionsSection';
-import { RecentChatCard } from '../../../components/ui/RecentChatCard';
 import { SearchBarButton } from '../../../components/ui/SearchBarButton';
 import { SectionHeader } from '../../../components/ui/SectionHeader';
 import { ErrorBanner } from '../../collections/components/ErrorBanner';
 import { useAuthMe } from '../../../hooks/queries/useAuthMe';
 import { useCollections } from '../../../hooks/queries/useCollections';
 import { useConversations } from '../../../hooks/queries/useConversations';
-import { useRecentDocuments } from '../../../hooks/queries/useDocuments';
+import { useDocuments, useRecentDocuments } from '../../../hooks/queries/useDocuments';
 import { getApiErrorMessage } from '../../../lib/apiError';
 import type { DocumentsStackParamList, MainTabParamList } from '../../../navigation/types';
 import { useTheme } from '../../../theme/ThemeProvider';
@@ -67,6 +67,7 @@ function SectionPlaceholder({ message }: { message: string }) {
           {
             color: theme.colors.textSecondary,
             fontSize: theme.typography.fontSizes.sm,
+            lineHeight: 20,
           },
         ]}
       >
@@ -84,24 +85,41 @@ export function DocumentsListScreen({ navigation }: Props) {
   const { data: user } = useAuthMe();
   const {
     data: recent,
-    isLoading,
+    isLoading: isRecentLoading,
     isError,
     error,
     refetch,
     isRefetching,
   } = useRecentDocuments();
-  const { data: collections = [] } = useCollections();
-  const { data: conversations = [] } = useConversations();
+  const { data: collections = [], isLoading: isCollectionsLoading } = useCollections();
+  const { data: conversations = [], isLoading: isChatsLoading } = useConversations();
+  const { data: allDocuments = [] } = useDocuments();
 
   const recentlyViewed = recent?.recentlyViewed ?? [];
   const recentlyAdded = recent?.recentlyAdded ?? [];
-  const recentChats = conversations.slice(0, 4);
+  const latestConversation = conversations[0] ?? null;
   const previewCollections = collections.slice(0, 8);
   const hasAnyContent =
     recentlyViewed.length > 0 ||
     recentlyAdded.length > 0 ||
     collections.length > 0 ||
     conversations.length > 0;
+
+  const documentCountByCollection = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const document of allDocuments) {
+      if (!document.collectionId) {
+        continue;
+      }
+
+      counts.set(document.collectionId, (counts.get(document.collectionId) ?? 0) + 1);
+    }
+
+    return counts;
+  }, [allDocuments]);
+
+  const isLoading = isRecentLoading || isCollectionsLoading || isChatsLoading;
 
   const handleCreatePress = useCallback(() => {
     navigation.navigate('CreateDocument');
@@ -135,11 +153,11 @@ export function DocumentsListScreen({ navigation }: Props) {
     [tabNavigation],
   );
 
-  const handleChatPress = useCallback(
-    (conversationId: string) => {
+  const handleOpenChat = useCallback(
+    (params?: AskMemoraOpenParams) => {
       tabNavigation?.navigate('Chat', {
         screen: 'ChatMain',
-        params: { conversationId },
+        params,
       });
     },
     [tabNavigation],
@@ -149,10 +167,6 @@ export function DocumentsListScreen({ navigation }: Props) {
     tabNavigation?.navigate('Collections', { screen: 'CollectionsList' });
   }, [tabNavigation]);
 
-  const handleSeeAllChats = useCallback(() => {
-    tabNavigation?.navigate('Chat', { screen: 'ChatHistory' });
-  }, [tabNavigation]);
-
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: false,
@@ -160,11 +174,7 @@ export function DocumentsListScreen({ navigation }: Props) {
   }, [navigation]);
 
   if (isLoading) {
-    return (
-      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator color={theme.colors.primary} size="large" />
-      </View>
-    );
+    return <HomeScreenSkeleton />;
   }
 
   if (isError) {
@@ -203,9 +213,9 @@ export function DocumentsListScreen({ navigation }: Props) {
               style={[
                 styles.greeting,
                 {
-                  color: theme.colors.text,
-                  fontSize: theme.typography.fontSizes.xl,
-                  fontWeight: theme.typography.fontWeights.bold,
+                  color: theme.colors.textSecondary,
+                  fontSize: theme.typography.fontSizes.sm,
+                  fontWeight: theme.typography.fontWeights.medium,
                 },
               ]}
             >
@@ -213,14 +223,26 @@ export function DocumentsListScreen({ navigation }: Props) {
             </Text>
             <Text
               style={[
-                styles.greetingSubtitle,
+                styles.brandTitle,
                 {
-                  color: theme.colors.textSecondary,
-                  fontSize: theme.typography.fontSizes.md,
+                  color: theme.colors.text,
+                  fontSize: theme.typography.fontSizes.xxl,
+                  fontWeight: theme.typography.fontWeights.bold,
                 },
               ]}
             >
-              What do you want to explore today?
+              Memora
+            </Text>
+            <Text
+              style={[
+                styles.greetingSubtitle,
+                {
+                  color: theme.colors.textSecondary,
+                  fontSize: theme.typography.fontSizes.sm,
+                },
+              ]}
+            >
+              Search your notes, PDFs, websites and YouTube with AI.
             </Text>
           </View>
 
@@ -235,10 +257,10 @@ export function DocumentsListScreen({ navigation }: Props) {
         {!hasAnyContent ? (
           <View style={styles.screenPadding}>
             <EmptyState
-              actionLabel="Create document"
+              actionLabel="Upload your first PDF"
               icon="📄"
-              subtitle="Add text documents, import URLs, or upload PDFs to build your knowledge base."
-              title="No documents yet"
+              subtitle="Start building your Memora knowledge library."
+              title="Your workspace is ready"
               onActionPress={handleCreatePress}
             />
           </View>
@@ -290,6 +312,7 @@ export function DocumentsListScreen({ navigation }: Props) {
               renderItem={({ item }) => (
                 <CollectionPreviewCard
                   collection={item}
+                  documentCount={documentCountByCollection.get(item.id) ?? 0}
                   onPress={() => handleCollectionPress(item.id)}
                 />
               )}
@@ -299,32 +322,19 @@ export function DocumentsListScreen({ navigation }: Props) {
         </View>
 
         <View style={[styles.section, styles.screenPadding]}>
-          <SectionHeader
-            actionLabel={conversations.length > 0 ? 'See all' : undefined}
-            title="Recent Chats"
-            onActionPress={conversations.length > 0 ? handleSeeAllChats : undefined}
+          <AskMemoraSection
+            documents={allDocuments}
+            latestConversation={latestConversation}
+            onOpenChat={handleOpenChat}
           />
-          {recentChats.length === 0 ? (
-            <SectionPlaceholder message="Start a chat and your questions will appear here." />
-          ) : (
-            <View style={styles.chatList}>
-              {recentChats.map((conversation) => (
-                <RecentChatCard
-                  key={conversation.id}
-                  conversation={conversation}
-                  onPress={() => handleChatPress(conversation.id)}
-                />
-              ))}
-            </View>
-          )}
         </View>
 
         <View style={[styles.section, styles.screenPadding]}>
           <SectionHeader title="Recent Documents" />
           {recentlyAdded.length === 0 ? (
-            <SectionPlaceholder message="New documents will appear here." />
+            <SectionPlaceholder message="New documents will appear here as you add content." />
           ) : (
-            <View style={styles.documentList}>
+            <View style={styles.listGap}>
               {recentlyAdded.map((document) => (
                 <CompactDocumentCard
                   key={document.id}
@@ -343,10 +353,10 @@ export function DocumentsListScreen({ navigation }: Props) {
         onPress={handleCreatePress}
         style={({ pressed }) => [
           styles.fab,
-          theme.elevation.soft,
+          theme.elevation.fab,
           {
             backgroundColor: theme.colors.primary,
-            opacity: pressed ? 0.9 : 1,
+            opacity: pressed ? 0.92 : 1,
             transform: [{ scale: pressed ? 0.96 : 1 }],
           },
         ]}
@@ -370,17 +380,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   scrollContent: {
-    gap: 24,
+    gap: 32,
   },
   greetingBlock: {
-    gap: 4,
-    marginBottom: 16,
+    gap: 6,
+    marginBottom: 20,
   },
   greeting: {
-    letterSpacing: -0.3,
+    letterSpacing: 0.2,
+  },
+  brandTitle: {
+    letterSpacing: -0.8,
   },
   greetingSubtitle: {
-    lineHeight: 22,
+    lineHeight: 21,
+    maxWidth: 320,
   },
   section: {
     gap: 0,
@@ -389,25 +403,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   placeholder: {
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     padding: 16,
   },
   placeholderText: {
     textAlign: 'center',
   },
-  chatList: {
-    gap: 8,
-  },
-  documentList: {
-    gap: 8,
+  listGap: {
+    gap: 10,
   },
   fab: {
     position: 'absolute',
     right: 20,
     bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
   },

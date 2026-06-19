@@ -13,6 +13,10 @@ interface RecentChatCardProps {
 
 export function RecentChatCard({ conversation, onPress, style }: RecentChatCardProps) {
   const { theme } = useTheme();
+  const title = conversation.title || 'Untitled chat';
+  const preview = conversation.preview || 'No messages yet';
+  const messageLabel =
+    conversation.messageCount === 1 ? '1 message' : `${conversation.messageCount} messages`;
 
   return (
     <Pressable
@@ -20,12 +24,14 @@ export function RecentChatCard({ conversation, onPress, style }: RecentChatCardP
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
+        theme.elevation.soft,
         style,
         {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.surfaceElevated,
+          borderColor: `${theme.colors.border}AA`,
           borderRadius: theme.radii.md,
           opacity: pressed ? 0.9 : 1,
+          transform: [{ scale: pressed ? 0.99 : 1 }],
         },
       ]}
     >
@@ -48,11 +54,11 @@ export function RecentChatCard({ conversation, onPress, style }: RecentChatCardP
             {
               color: theme.colors.text,
               fontSize: theme.typography.fontSizes.sm,
-              fontWeight: theme.typography.fontWeights.medium,
+              fontWeight: theme.typography.fontWeights.semibold,
             },
           ]}
         >
-          {conversation.title || conversation.preview || 'Untitled chat'}
+          {title}
         </Text>
         <Text
           numberOfLines={1}
@@ -64,20 +70,44 @@ export function RecentChatCard({ conversation, onPress, style }: RecentChatCardP
             },
           ]}
         >
-          {conversation.preview || 'No messages yet'}
+          {preview}
         </Text>
+        <View style={styles.footer}>
+          <View
+            style={[
+              styles.badge,
+              {
+                backgroundColor: `${theme.colors.primary}14`,
+                borderRadius: theme.radii.full,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.badgeText,
+                {
+                  color: theme.colors.primary,
+                  fontSize: theme.typography.fontSizes.xs,
+                  fontWeight: theme.typography.fontWeights.medium,
+                },
+              ]}
+            >
+              {messageLabel}
+            </Text>
+          </View>
+          <Text
+            style={[
+              styles.time,
+              {
+                color: theme.colors.textSecondary,
+                fontSize: theme.typography.fontSizes.xs,
+              },
+            ]}
+          >
+            {formatRelativeTime(conversation.updatedAt)}
+          </Text>
+        </View>
       </View>
-      <Text
-        style={[
-          styles.time,
-          {
-            color: theme.colors.textSecondary,
-            fontSize: theme.typography.fontSizes.xs,
-          },
-        ]}
-      >
-        {formatRelativeTime(conversation.updatedAt)}
-      </Text>
     </Pressable>
   );
 }
@@ -85,26 +115,40 @@ export function RecentChatCard({ conversation, onPress, style }: RecentChatCardP
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 2,
   },
   content: {
     flex: 1,
-    gap: 2,
+    gap: 4,
   },
-  question: {},
-  preview: {},
-  time: {
-    alignSelf: 'flex-start',
+  question: {
+    lineHeight: 18,
+  },
+  preview: {
+    lineHeight: 16,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
     marginTop: 2,
   },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  badgeText: {},
+  time: {},
 });

@@ -13,16 +13,19 @@ import {
   View,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DocumentListItem } from '../components/DocumentListItem';
+import { EmptyState } from '../../../components/ui/EmptyState';
+import { SectionHeader } from '../../../components/ui/SectionHeader';
+import { AddContentSheet } from '../components/AddContentSheet';
+import { CollectionDocumentRow } from '../components/CollectionDocumentRow';
 import { ErrorBanner } from '../components/ErrorBanner';
-import { PdfUploadButton } from '../../documents/components/PdfUploadButton';
-import { UrlImportButton } from '../../documents/components/UrlImportButton';
-import { YoutubeImportButton } from '../../documents/components/YoutubeImportButton';
 import { DEFAULT_COLLECTION_COLOR, DEFAULT_COLLECTION_ICON } from '../constants';
+import { CollectionIconDisplay } from '../components/CollectionIconDisplay';
 import { useDeleteCollection } from '../../../hooks/mutations/useDeleteCollection';
 import { useCollection } from '../../../hooks/queries/useCollection';
 import { useCollectionDocuments } from '../../../hooks/queries/useCollectionDocuments';
+import { formatRelativeTime } from '../../documents/utils/formatDocument';
 import { getApiErrorMessage } from '../../../lib/apiError';
 import type { CollectionsStackParamList, MainTabParamList } from '../../../navigation/types';
 import { useTheme } from '../../../theme/ThemeProvider';
@@ -32,10 +35,15 @@ type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList>
 >;
 
+type AddContentFlow = 'pdf' | 'url' | 'youtube' | 'note' | 'ocr';
+
 export function CollectionDetailScreen({ navigation, route }: Props) {
   const { collectionId } = route.params;
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [addContentFlow, setAddContentFlow] = useState<AddContentFlow | null>(null);
   const deleteCollection = useDeleteCollection();
   const {
     data: collection,
@@ -78,6 +86,16 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
     });
   }, [collectionId, navigation]);
 
+  const handleOpenAddContent = useCallback(() => {
+    setAddContentFlow(null);
+    setIsAddSheetOpen(true);
+  }, []);
+
+  const handleCloseAddContent = useCallback(() => {
+    setIsAddSheetOpen(false);
+    setAddContentFlow(null);
+  }, []);
+
   const handleChatWithCollection = useCallback(() => {
     navigation.navigate('Chat', {
       screen: 'ChatMain',
@@ -85,7 +103,7 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
     });
   }, [collectionId, navigation]);
 
-  const handlePdfUploadSuccess = useCallback(
+  const handleImportSuccess = useCallback(
     (documentId: string) => {
       navigation.navigate('Home', {
         screen: 'DocumentDetail',
@@ -175,12 +193,15 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
   }
 
   const accentColor = collection.color ?? DEFAULT_COLLECTION_COLOR;
-  const icon = collection.icon ?? DEFAULT_COLLECTION_ICON;
+  const documentLabel = documents.length === 1 ? '1 document' : `${documents.length} documents`;
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[
+          styles.container,
+          { paddingBottom: insets.bottom + 96 },
+        ]}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -188,216 +209,224 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
             onRefresh={() => void handleRefresh()}
           />
         }
+        showsVerticalScrollIndicator={false}
       >
         <View
           style={[
             styles.headerCard,
+            theme.elevation.soft,
             {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.surfaceElevated,
+              borderColor: `${theme.colors.border}AA`,
+              borderRadius: theme.radii.xl,
             },
           ]}
         >
-          <View style={[styles.colorStrip, { backgroundColor: accentColor }]} />
-          <View style={styles.headerContent}>
-            <Text style={styles.headerIcon}>{icon}</Text>
-            <View style={styles.headerText}>
+          <View
+            pointerEvents="none"
+            style={[
+              styles.headerGradient,
+              {
+                backgroundColor: `${accentColor}12`,
+                borderTopLeftRadius: theme.radii.xl,
+                borderTopRightRadius: theme.radii.xl,
+              },
+            ]}
+          />
+
+          <View style={styles.headerBody}>
+            <View
+              style={[
+                styles.iconWrap,
+                {
+                  backgroundColor: `${accentColor}20`,
+                  borderRadius: theme.radii.lg,
+                },
+              ]}
+            >
+              <CollectionIconDisplay icon={collection.icon ?? DEFAULT_COLLECTION_ICON} size={28} />
+            </View>
+
+            <Text
+              style={[
+                styles.collectionName,
+                {
+                  color: theme.colors.text,
+                  fontSize: theme.typography.fontSizes.xxl,
+                  fontWeight: theme.typography.fontWeights.bold,
+                },
+              ]}
+            >
+              {collection.name}
+            </Text>
+
+            {collection.description ? (
               <Text
                 style={[
-                  styles.headerName,
+                  styles.description,
                   {
-                    color: theme.colors.text,
-                    fontSize: theme.typography.fontSizes.xl,
-                    fontWeight: theme.typography.fontWeights.semibold,
+                    color: theme.colors.textSecondary,
+                    fontSize: theme.typography.fontSizes.md,
+                    lineHeight: 22,
                   },
                 ]}
               >
-                {collection.name}
+                {collection.description}
               </Text>
-              {collection.description ? (
+            ) : null}
+
+            <View style={styles.metaRow}>
+              <View
+                style={[
+                  styles.metaBadge,
+                  {
+                    backgroundColor: `${accentColor}16`,
+                    borderRadius: theme.radii.full,
+                  },
+                ]}
+              >
+                <Ionicons color={accentColor} name="documents-outline" size={14} />
                 <Text
                   style={[
-                    styles.headerDescription,
+                    styles.metaBadgeText,
                     {
-                      color: theme.colors.textSecondary,
-                      fontSize: theme.typography.fontSizes.md,
+                      color: theme.colors.text,
+                      fontSize: theme.typography.fontSizes.xs,
+                      fontWeight: theme.typography.fontWeights.medium,
                     },
                   ]}
                 >
-                  {collection.description}
+                  {documentLabel}
                 </Text>
-              ) : null}
+              </View>
               <Text
                 style={[
-                  styles.documentCount,
+                  styles.metaTime,
                   {
                     color: theme.colors.textSecondary,
-                    fontSize: theme.typography.fontSizes.sm,
+                    fontSize: theme.typography.fontSizes.xs,
                   },
                 ]}
               >
-                {documents.length} {documents.length === 1 ? 'document' : 'documents'}
+                Updated {formatRelativeTime(collection.updatedAt).toLowerCase()}
               </Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Chat with this collection"
-                onPress={handleChatWithCollection}
-                style={({ pressed }) => [
-                  styles.chatButton,
-                  {
-                    backgroundColor: theme.colors.primary,
-                    opacity: pressed ? 0.85 : 1,
-                  },
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Chat with this collection"
+              onPress={handleChatWithCollection}
+              style={({ pressed }) => [
+                styles.chatButton,
+                theme.elevation.soft,
+                {
+                  backgroundColor: theme.colors.primary,
+                  borderRadius: theme.radii.lg,
+                  opacity: pressed ? 0.9 : 1,
+                  transform: [{ scale: pressed ? 0.985 : 1 }],
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.chatIconWrap,
+                  { backgroundColor: `${theme.colors.primaryText}22` },
                 ]}
               >
-                <Ionicons color={theme.colors.primaryText} name="chatbubble-ellipses-outline" size={18} />
+                <Ionicons color={theme.colors.primaryText} name="sparkles" size={18} />
+              </View>
+              <View style={styles.chatButtonTextWrap}>
                 <Text
                   style={[
-                    styles.chatButtonText,
+                    styles.chatButtonTitle,
                     {
                       color: theme.colors.primaryText,
-                      fontSize: theme.typography.fontSizes.sm,
+                      fontSize: theme.typography.fontSizes.md,
                       fontWeight: theme.typography.fontWeights.semibold,
                     },
                   ]}
                 >
                   Chat with Collection
                 </Text>
-              </Pressable>
-            </View>
+                <Text
+                  style={[
+                    styles.chatButtonSubtitle,
+                    {
+                      color: `${theme.colors.primaryText}CC`,
+                      fontSize: theme.typography.fontSizes.xs,
+                    },
+                  ]}
+                >
+                  Ask AI about everything saved here
+                </Text>
+              </View>
+              <Ionicons color={theme.colors.primaryText} name="chevron-forward" size={20} />
+            </Pressable>
           </View>
         </View>
 
         {deleteCollection.error ? (
-          <View style={styles.bannerWrap}>
-            <ErrorBanner message={getApiErrorMessage(deleteCollection.error, 'Delete failed')} />
-          </View>
+          <ErrorBanner message={getApiErrorMessage(deleteCollection.error, 'Delete failed')} />
         ) : null}
 
-        <Text
-          style={[
-            styles.sectionTitle,
-            {
-              color: theme.colors.text,
-              fontSize: theme.typography.fontSizes.md,
-              fontWeight: theme.typography.fontWeights.semibold,
-            },
-          ]}
-        >
-          Documents
-        </Text>
+        <View style={styles.documentsSection}>
+          <SectionHeader title="Documents" />
 
-        <PdfUploadButton
-          collectionId={collectionId}
-          label="Upload PDF to collection"
-          variant="secondary"
-          onSuccess={(document) => handlePdfUploadSuccess(document.id)}
-        />
-
-        <UrlImportButton
-          collectionId={collectionId}
-          label="Import URL to collection"
-          variant="secondary"
-          onSuccess={(document) => handlePdfUploadSuccess(document.id)}
-        />
-
-        <YoutubeImportButton
-          collectionId={collectionId}
-          label="Import YouTube to collection"
-          variant="secondary"
-          onSuccess={(document) => handlePdfUploadSuccess(document.id)}
-        />
-
-        {isDocumentsLoading ? (
-          <ActivityIndicator color={theme.colors.primary} style={styles.documentsLoader} />
-        ) : isDocumentsError ? (
-          <ErrorBanner
-            message={getApiErrorMessage(documentsError, 'Failed to load documents')}
-            onRetry={() => void refetchDocuments()}
-          />
-        ) : documents.length === 0 ? (
-          <View style={styles.emptyDocuments}>
-            <Text
-              style={[
-                styles.emptyText,
-                {
-                  color: theme.colors.textSecondary,
-                  fontSize: theme.typography.fontSizes.md,
-                },
-              ]}
-            >
-              No documents in this collection yet.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={handleCreateDocument}
-              style={({ pressed }) => [
-                styles.emptyCta,
-                {
-                  backgroundColor: theme.colors.primary,
-                  opacity: pressed ? 0.85 : 1,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.emptyCtaText,
-                  {
-                    color: theme.colors.primaryText,
-                    fontSize: theme.typography.fontSizes.sm,
-                    fontWeight: theme.typography.fontWeights.semibold,
-                  },
-                ]}
-              >
-                Add document
-              </Text>
-            </Pressable>
-            <PdfUploadButton
-              collectionId={collectionId}
-              label="Upload PDF"
-              variant="secondary"
-              onSuccess={(document) => handlePdfUploadSuccess(document.id)}
+          {isDocumentsLoading ? (
+            <ActivityIndicator color={theme.colors.primary} style={styles.documentsLoader} />
+          ) : isDocumentsError ? (
+            <ErrorBanner
+              message={getApiErrorMessage(documentsError, 'Failed to load documents')}
+              onRetry={() => void refetchDocuments()}
             />
-            <UrlImportButton
-              collectionId={collectionId}
-              label="Import URL"
-              variant="secondary"
-              onSuccess={(document) => handlePdfUploadSuccess(document.id)}
+          ) : documents.length === 0 ? (
+            <EmptyState
+              actionLabel="Add Content"
+              icon="📚"
+              subtitle="Add PDFs, websites, YouTube videos or notes to start chatting with AI."
+              title="This collection is empty."
+              onActionPress={handleOpenAddContent}
             />
-            <YoutubeImportButton
-              collectionId={collectionId}
-              label="Import YouTube"
-              variant="secondary"
-              onSuccess={(document) => handlePdfUploadSuccess(document.id)}
-            />
-          </View>
-        ) : (
-          <View style={styles.documentsList}>
-            {documents.map((document) => (
-              <DocumentListItem
-                key={document.id}
-                document={document}
-                onPress={() => handleDocumentPress(document.id)}
-              />
-            ))}
-          </View>
-        )}
+          ) : (
+            <View style={styles.documentsList}>
+              {documents.map((document) => (
+                <CollectionDocumentRow
+                  key={document.id}
+                  document={document}
+                  onPress={() => handleDocumentPress(document.id)}
+                />
+              ))}
+            </View>
+          )}
+        </View>
       </ScrollView>
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Create document in collection"
-        onPress={handleCreateDocument}
+        accessibilityLabel="Add content to collection"
+        onPress={handleOpenAddContent}
         style={({ pressed }) => [
           styles.fab,
+          theme.elevation.fab,
           {
             backgroundColor: theme.colors.primary,
-            opacity: pressed ? 0.9 : 1,
+            opacity: pressed ? 0.92 : 1,
+            transform: [{ scale: pressed ? 0.96 : 1 }],
           },
         ]}
       >
         <Ionicons name="add" size={28} color={theme.colors.primaryText} />
       </Pressable>
+
+      <AddContentSheet
+        activeFlow={addContentFlow}
+        collectionId={collectionId}
+        visible={isAddSheetOpen}
+        onClose={handleCloseAddContent}
+        onCreateNote={handleCreateDocument}
+        onFlowChange={setAddContentFlow}
+        onImportSuccess={(document) => handleImportSuccess(document.id)}
+      />
     </View>
   );
 }
@@ -408,9 +437,9 @@ const styles = StyleSheet.create({
   },
   container: {
     flexGrow: 1,
-    padding: 16,
-    gap: 16,
-    paddingBottom: 96,
+    gap: 28,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   centered: {
     flex: 1,
@@ -429,67 +458,76 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   headerCard: {
-    borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
-    flexDirection: 'row',
   },
-  colorStrip: {
-    width: 6,
+  headerGradient: {
+    height: 88,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
-  headerContent: {
-    flex: 1,
-    flexDirection: 'row',
+  headerBody: {
     gap: 12,
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 20,
   },
-  headerIcon: {
-    fontSize: 36,
+  iconWrap: {
+    alignItems: 'center',
+    height: 56,
+    justifyContent: 'center',
+    width: 56,
   },
-  headerText: {
-    flex: 1,
+  collectionName: {
+    letterSpacing: -0.6,
+  },
+  description: {},
+  metaRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 2,
+  },
+  metaBadge: {
+    alignItems: 'center',
+    flexDirection: 'row',
     gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
-  headerName: {},
-  headerDescription: {},
-  documentCount: {
-    marginTop: 4,
-  },
+  metaBadgeText: {},
+  metaTime: {},
   chatButton: {
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    borderRadius: 10,
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
-    minHeight: 40,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    gap: 12,
+    marginTop: 8,
+    minHeight: 64,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  chatButtonText: {},
-  bannerWrap: {
-    marginBottom: 4,
+  chatIconWrap: {
+    alignItems: 'center',
+    borderRadius: 12,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
   },
-  sectionTitle: {
-    marginTop: 4,
+  chatButtonTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  chatButtonTitle: {},
+  chatButtonSubtitle: {},
+  documentsSection: {
+    gap: 0,
   },
   documentsLoader: {
-    marginTop: 16,
+    marginTop: 24,
   },
-  emptyDocuments: {
-    marginTop: 8,
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  emptyText: {},
-  emptyCta: {
-    minHeight: 40,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyCtaText: {},
   documentsList: {
     gap: 10,
   },
@@ -497,15 +535,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 20,
     bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
 });

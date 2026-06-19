@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { ChatCollectionScope } from '../../../api/types';
 import { DEFAULT_COLLECTION_COLOR } from '../../collections/constants';
+import { CollectionIconDisplay } from '../../collections/components/CollectionIconDisplay';
 import { useTheme } from '../../../theme/ThemeProvider';
 
 interface CollectionScopeBadgeProps {
@@ -27,20 +28,24 @@ export function CollectionScopeBadge({ collection, onClear }: CollectionScopeBad
       <View style={[styles.accent, { backgroundColor: accentColor }]} />
       <View style={styles.content}>
         <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Chatting with</Text>
-        <Text
-          numberOfLines={1}
-          style={[
-            styles.name,
-            {
-              color: theme.colors.text,
-              fontSize: theme.typography.fontSizes.sm,
-              fontWeight: theme.typography.fontWeights.semibold,
-            },
-          ]}
-        >
-          {collection.icon ? `${collection.icon} ` : ''}
-          {collection.name}
-        </Text>
+        <View style={styles.nameRow}>
+          {collection.icon ? (
+            <CollectionIconDisplay icon={collection.icon} size={16} style={styles.nameIcon} />
+          ) : null}
+          <Text
+            numberOfLines={1}
+            style={[
+              styles.name,
+              {
+                color: theme.colors.text,
+                fontSize: theme.typography.fontSizes.sm,
+                fontWeight: theme.typography.fontWeights.semibold,
+              },
+            ]}
+          >
+            {collection.name}
+          </Text>
+        </View>
       </View>
       <Pressable
         accessibilityLabel="Clear collection scope"
@@ -79,7 +84,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
-  name: {},
+  name: {
+    flex: 1,
+  },
+  nameRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
+  },
+  nameIcon: {},
   clearButton: {
     paddingLeft: 8,
   },

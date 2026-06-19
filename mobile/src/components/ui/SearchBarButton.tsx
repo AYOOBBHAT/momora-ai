@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { useTheme } from '../../theme/ThemeProvider';
 
@@ -9,7 +9,7 @@ interface SearchBarButtonProps {
 }
 
 export function SearchBarButton({
-  placeholder = 'Search anything…',
+  placeholder = 'Search notes, PDFs, websites and YouTube…',
   onPress,
 }: SearchBarButtonProps) {
   const { theme } = useTheme();
@@ -21,21 +21,24 @@ export function SearchBarButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.container,
+        theme.elevation.soft,
         {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.surfaceElevated,
+          borderColor: `${theme.colors.border}99`,
           borderRadius: theme.radii.xl,
-          opacity: pressed ? 0.9 : 1,
+          opacity: pressed ? 0.92 : 1,
+          transform: [{ scale: pressed ? 0.995 : 1 }],
         },
       ]}
     >
-      <Ionicons color={theme.colors.textSecondary} name="search" size={20} />
+      <Ionicons color={theme.colors.primary} name="search" size={20} />
       <Text
+        numberOfLines={1}
         style={[
           styles.placeholder,
           {
             color: theme.colors.textSecondary,
-            fontSize: theme.typography.fontSizes.md,
+            fontSize: theme.typography.fontSizes.sm,
           },
         ]}
       >
@@ -49,12 +52,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    borderWidth: 1,
-    minHeight: 48,
-    paddingHorizontal: 16,
+    gap: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    minHeight: 52,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
   },
   placeholder: {
     flex: 1,
+    lineHeight: 20,
   },
 });

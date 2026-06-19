@@ -2,10 +2,12 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
   COLLECTION_COLORS,
-  COLLECTION_ICONS,
+  COLLECTION_ICON_OPTIONS,
   DEFAULT_COLLECTION_COLOR,
   DEFAULT_COLLECTION_ICON,
 } from '../constants';
+import { CollectionIconDisplay } from './CollectionIconDisplay';
+import { encodeCollectionIcon } from '../utils/collectionIcon';
 import { useTheme } from '../../../theme/ThemeProvider';
 
 export interface CollectionFormValues {
@@ -138,14 +140,17 @@ export function CollectionFormFields({ values, onChange, nameError }: Collection
           Icon
         </Text>
         <View style={styles.pickerRow}>
-          {COLLECTION_ICONS.map((icon) => {
-            const selected = values.icon === icon;
+          {COLLECTION_ICON_OPTIONS.map((option) => {
+            const encodedIcon = encodeCollectionIcon(option);
+            const selected = values.icon === encodedIcon;
+
             return (
               <Pressable
-                key={icon}
+                key={encodedIcon}
+                accessibilityLabel={option.label}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                onPress={() => onChange({ ...values, icon })}
+                onPress={() => onChange({ ...values, icon: encodedIcon })}
                 style={[
                   styles.iconButton,
                   {
@@ -154,7 +159,11 @@ export function CollectionFormFields({ values, onChange, nameError }: Collection
                   },
                 ]}
               >
-                <Text style={styles.iconEmoji}>{icon}</Text>
+                <CollectionIconDisplay
+                  color={option.kind === 'ionicon' ? theme.colors.text : undefined}
+                  icon={encodedIcon}
+                  size={22}
+                />
               </Pressable>
             );
           })}
@@ -212,8 +221,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconEmoji: {
-    fontSize: 22,
   },
 });
