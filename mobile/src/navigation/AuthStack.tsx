@@ -60,7 +60,7 @@ export function AuthStack() {
 
         component={RegisterScreen}
 
-        options={{ title: 'Create account' }}
+        options={{ headerShown: false }}
 
       />
 

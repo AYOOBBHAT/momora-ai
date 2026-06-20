@@ -1,15 +1,11 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { AuthFooterLink } from '../components/AuthFooterLink';
 import { AuthFormLayout } from '../components/AuthFormLayout';
+import { AuthPrimaryButton } from '../components/AuthPrimaryButton';
+import { AuthTextInput } from '../components/AuthTextInput';
 import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { useLogin } from '../../../hooks/mutations/useLogin';
 import { getApiErrorMessage } from '../../../lib/apiError';
@@ -59,31 +55,17 @@ export function LoginScreen({ navigation }: Props) {
     );
   };
 
-  const inputStyle = [
-    styles.input,
-    {
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.border,
-      borderRadius: theme.radii.md,
-      color: theme.colors.text,
-    },
-  ];
-
   return (
     <AuthFormLayout
-      title="Welcome back"
-      subtitle="Sign in to access your memories"
       footer={
-        <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>
-          Don&apos;t have an account?{' '}
-          <Text
-            style={{ color: theme.colors.primary, fontWeight: theme.typography.fontWeights.semibold }}
-            onPress={() => navigation.navigate('Register')}
-          >
-            Sign up
-          </Text>
-        </Text>
+        <AuthFooterLink
+          actionLabel="Sign up"
+          prompt="Don't have an account?"
+          onPress={() => navigation.navigate('Register')}
+        />
       }
+      subtitle="Access your AI-powered knowledge library and continue where you left off."
+      title="Welcome back"
     >
       {apiError ? (
         <View style={[styles.errorBox, { backgroundColor: `${theme.colors.error}15` }]}>
@@ -92,14 +74,12 @@ export function LoginScreen({ navigation }: Props) {
       ) : null}
 
       <View style={styles.field}>
-        <Text style={[styles.label, { color: theme.colors.text }]}>Email</Text>
-        <TextInput
+        <AuthTextInput
           autoCapitalize="none"
           autoComplete="email"
           keyboardType="email-address"
+          label="Email"
           placeholder="you@example.com"
-          placeholderTextColor={theme.colors.textSecondary}
-          style={inputStyle}
           value={email}
           onChangeText={setEmail}
         />
@@ -107,18 +87,43 @@ export function LoginScreen({ navigation }: Props) {
 
       <View style={styles.field}>
         <View style={styles.labelRow}>
-          <Text style={[styles.label, { color: theme.colors.text }]}>Password</Text>
-          <Pressable onPress={() => navigation.navigate('ForgotPassword')}>
-            <Text style={[styles.link, { color: theme.colors.primary }]}>Forgot password?</Text>
+          <Text
+            style={[
+              styles.label,
+              {
+                color: theme.colors.text,
+                fontSize: theme.typography.fontSizes.sm,
+                fontWeight: theme.typography.fontWeights.medium,
+              },
+            ]}
+          >
+            Password
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={() => navigation.navigate('ForgotPassword')}
+            style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
+          >
+            <Text
+              style={[
+                styles.link,
+                {
+                  color: theme.colors.primary,
+                  fontSize: theme.typography.fontSizes.sm,
+                  fontWeight: theme.typography.fontWeights.medium,
+                },
+              ]}
+            >
+              Forgot password?
+            </Text>
           </Pressable>
         </View>
-        <TextInput
+        <AuthTextInput
           autoCapitalize="none"
           autoComplete="password"
           placeholder="••••••••"
-          placeholderTextColor={theme.colors.textSecondary}
           secureTextEntry
-          style={inputStyle}
           value={password}
           onChangeText={setPassword}
         />
@@ -128,31 +133,11 @@ export function LoginScreen({ navigation }: Props) {
         <Text style={[styles.fieldError, { color: theme.colors.error }]}>{fieldError}</Text>
       ) : null}
 
-      <Pressable
-        accessibilityRole="button"
-        disabled={login.isPending}
+      <AuthPrimaryButton
+        label="Sign in"
+        loading={login.isPending}
         onPress={handleSubmit}
-        style={({ pressed }) => [
-          styles.primaryButton,
-          {
-            backgroundColor: theme.colors.primary,
-            opacity: pressed || login.isPending ? 0.85 : 1,
-          },
-        ]}
-      >
-        {login.isPending ? (
-          <ActivityIndicator color={theme.colors.primaryText} />
-        ) : (
-          <Text
-            style={[
-              styles.primaryButtonText,
-              { color: theme.colors.primaryText, fontWeight: theme.typography.fontWeights.semibold },
-            ]}
-          >
-            Sign in
-          </Text>
-        )}
-      </Pressable>
+      />
 
       <GoogleSignInButton onError={setApiError} />
     </AuthFormLayout>
@@ -164,25 +149,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   labelRow: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 8,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  link: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  input: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-  },
+  label: {},
+  link: {},
   fieldError: {
     fontSize: 14,
   },
@@ -192,20 +165,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    textAlign: 'center',
-  },
-  primaryButton: {
-    minHeight: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  primaryButtonText: {
-    fontSize: 16,
-  },
-  footerText: {
-    fontSize: 15,
     textAlign: 'center',
   },
 });

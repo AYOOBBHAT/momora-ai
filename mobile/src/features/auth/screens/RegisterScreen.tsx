@@ -1,15 +1,11 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { AuthFooterLink } from '../components/AuthFooterLink';
 import { AuthFormLayout } from '../components/AuthFormLayout';
+import { AuthPrimaryButton } from '../components/AuthPrimaryButton';
+import { AuthTextInput } from '../components/AuthTextInput';
 import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { useRegister } from '../../../hooks/mutations/useRegister';
 import { getApiErrorMessage } from '../../../lib/apiError';
@@ -64,30 +60,19 @@ export function RegisterScreen({ navigation }: Props) {
     );
   };
 
-  const inputStyle = [
-    styles.input,
-    {
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.border,
-      color: theme.colors.text,
-    },
-  ];
-
   return (
     <AuthFormLayout
-      title="Create account"
-      subtitle="Start building your AI-powered memory library"
+      showBack
       footer={
-        <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>
-          Already have an account?{' '}
-          <Text
-            style={{ color: theme.colors.primary, fontWeight: theme.typography.fontWeights.semibold }}
-            onPress={() => navigation.navigate('Login')}
-          >
-            Sign in
-          </Text>
-        </Text>
+        <AuthFooterLink
+          actionLabel="Sign in"
+          prompt="Already have an account?"
+          onPress={() => navigation.navigate('Login')}
+        />
       }
+      subtitle="Start building your personal AI knowledge base with documents, notes, websites and YouTube."
+      title="Create account"
+      onBack={() => navigation.goBack()}
     >
       {apiError ? (
         <View style={[styles.errorBox, { backgroundColor: `${theme.colors.error}15` }]}>
@@ -95,76 +80,44 @@ export function RegisterScreen({ navigation }: Props) {
         </View>
       ) : null}
 
-      <View style={styles.field}>
-        <Text style={[styles.label, { color: theme.colors.text }]}>Name</Text>
-        <TextInput
-          autoCapitalize="words"
-          autoComplete="name"
-          placeholder="Your name"
-          placeholderTextColor={theme.colors.textSecondary}
-          style={inputStyle}
-          value={name}
-          onChangeText={setName}
-        />
-      </View>
+      <AuthTextInput
+        autoCapitalize="words"
+        autoComplete="name"
+        label="Name"
+        placeholder="Your name"
+        value={name}
+        onChangeText={setName}
+      />
 
-      <View style={styles.field}>
-        <Text style={[styles.label, { color: theme.colors.text }]}>Email</Text>
-        <TextInput
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          placeholder="you@example.com"
-          placeholderTextColor={theme.colors.textSecondary}
-          style={inputStyle}
-          value={email}
-          onChangeText={setEmail}
-        />
-      </View>
+      <AuthTextInput
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        label="Email"
+        placeholder="you@example.com"
+        value={email}
+        onChangeText={setEmail}
+      />
 
-      <View style={styles.field}>
-        <Text style={[styles.label, { color: theme.colors.text }]}>Password</Text>
-        <TextInput
-          autoCapitalize="none"
-          autoComplete="new-password"
-          placeholder="At least 8 characters"
-          placeholderTextColor={theme.colors.textSecondary}
-          secureTextEntry
-          style={inputStyle}
-          value={password}
-          onChangeText={setPassword}
-        />
-      </View>
+      <AuthTextInput
+        autoCapitalize="none"
+        autoComplete="new-password"
+        label="Password"
+        placeholder="At least 8 characters"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
 
       {fieldError ? (
         <Text style={[styles.fieldError, { color: theme.colors.error }]}>{fieldError}</Text>
       ) : null}
 
-      <Pressable
-        accessibilityRole="button"
-        disabled={register.isPending}
+      <AuthPrimaryButton
+        label="Create account"
+        loading={register.isPending}
         onPress={handleSubmit}
-        style={({ pressed }) => [
-          styles.primaryButton,
-          {
-            backgroundColor: theme.colors.primary,
-            opacity: pressed || register.isPending ? 0.85 : 1,
-          },
-        ]}
-      >
-        {register.isPending ? (
-          <ActivityIndicator color={theme.colors.primaryText} />
-        ) : (
-          <Text
-            style={[
-              styles.primaryButtonText,
-              { color: theme.colors.primaryText, fontWeight: theme.typography.fontWeights.semibold },
-            ]}
-          >
-            Create account
-          </Text>
-        )}
-      </Pressable>
+      />
 
       <GoogleSignInButton onError={setApiError} />
     </AuthFormLayout>
@@ -172,20 +125,6 @@ export function RegisterScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  field: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  input: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-  },
   fieldError: {
     fontSize: 14,
   },
@@ -195,20 +134,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    textAlign: 'center',
-  },
-  primaryButton: {
-    minHeight: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  primaryButtonText: {
-    fontSize: 16,
-  },
-  footerText: {
-    fontSize: 15,
     textAlign: 'center',
   },
 });

@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useGoogleSignIn } from '../../../hooks/mutations/useGoogleSignIn';
 import { getApiErrorMessage } from '../../../lib/apiError';
@@ -82,10 +83,21 @@ export function GoogleSignInButton({ onError }: GoogleSignInButtonProps) {
 
   return (
     <View style={styles.wrapper}>
-      <View style={[styles.dividerRow, { marginVertical: theme.spacing.md }]}>
-        <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
-        <Text style={[styles.dividerText, { color: theme.colors.textSecondary }]}>or</Text>
-        <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+      <View style={styles.dividerRow}>
+        <View style={[styles.divider, { backgroundColor: `${theme.colors.border}99` }]} />
+        <Text
+          style={[
+            styles.dividerText,
+            {
+              color: theme.colors.textSecondary,
+              fontSize: theme.typography.fontSizes.xs,
+              fontWeight: theme.typography.fontWeights.medium,
+            },
+          ]}
+        >
+          OR
+        </Text>
+        <View style={[styles.divider, { backgroundColor: `${theme.colors.border}99` }]} />
       </View>
 
       <Pressable
@@ -94,28 +106,34 @@ export function GoogleSignInButton({ onError }: GoogleSignInButtonProps) {
         onPress={() => void handlePress()}
         style={({ pressed }) => [
           styles.button,
+          theme.elevation.soft,
           {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.border,
-            opacity: pressed || isLoading ? 0.85 : 1,
+            backgroundColor: theme.colors.surfaceElevated,
+            borderColor: `${theme.colors.border}CC`,
+            borderRadius: theme.radii.lg,
+            opacity: pressed || isLoading ? 0.9 : 1,
+            transform: [{ scale: pressed && !isLoading ? 0.99 : 1 }],
           },
         ]}
       >
         {isLoading ? (
           <ActivityIndicator color={theme.colors.primary} />
         ) : (
-          <Text
-            style={[
-              styles.buttonText,
-              {
-                color: theme.colors.text,
-                fontSize: theme.typography.fontSizes.md,
-                fontWeight: theme.typography.fontWeights.medium,
-              },
-            ]}
-          >
-            Continue with Google
-          </Text>
+          <View style={styles.buttonContent}>
+            <Ionicons color="#4285F4" name="logo-google" size={20} />
+            <Text
+              style={[
+                styles.buttonText,
+                {
+                  color: theme.colors.text,
+                  fontSize: theme.typography.fontSizes.md,
+                  fontWeight: theme.typography.fontWeights.medium,
+                },
+              ]}
+            >
+              Continue with Google
+            </Text>
+          </View>
         )}
       </Pressable>
     </View>
@@ -124,29 +142,34 @@ export function GoogleSignInButton({ onError }: GoogleSignInButtonProps) {
 
 const styles = StyleSheet.create({
   wrapper: {
+    gap: 16,
+    marginTop: 8,
     width: '100%',
   },
   dividerRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    flexDirection: 'row',
+    gap: 14,
   },
   divider: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
   },
   dividerText: {
-    fontSize: 14,
+    letterSpacing: 1.2,
   },
   button: {
-    minHeight: 48,
-    borderRadius: 12,
-    borderWidth: 1,
     alignItems: 'center',
+    borderWidth: 1,
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    minHeight: 56,
+    paddingHorizontal: 18,
   },
-  buttonText: {
-    textAlign: 'center',
+  buttonContent: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'center',
   },
+  buttonText: {},
 });

@@ -231,7 +231,7 @@ export function DocumentsListScreen({ navigation }: Props) {
                 },
               ]}
             >
-              Memora
+              Memora AI
             </Text>
             <Text
               style={[

@@ -348,7 +348,7 @@ export function ChatScreen({ navigation, route }: Props) {
   }, [navigation]);
 
   useLayoutEffect(() => {
-    const headerTitle = conversationTitle?.trim() || 'Chat with Memora';
+    const headerTitle = conversationTitle?.trim() || 'Chat with Memora AI';
 
     navigation.setOptions({
       title: headerTitle,

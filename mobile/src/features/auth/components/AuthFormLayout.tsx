@@ -1,7 +1,10 @@
-import type { ReactNode } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { useEffect, useRef, type ReactNode } from 'react';
 import {
+  Animated,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,16 +19,42 @@ interface AuthFormLayoutProps {
   subtitle?: string;
   children: ReactNode;
   footer?: ReactNode;
+  showBack?: boolean;
+  onBack?: () => void;
 }
 
-export function AuthFormLayout({ title, subtitle, children, footer }: AuthFormLayoutProps) {
+export function AuthFormLayout({
+  title,
+  subtitle,
+  children,
+  footer,
+  showBack = false,
+  onBack,
+}: AuthFormLayoutProps) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(16)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fadeAnim, slideAnim]);
 
   return (
     <KeyboardAvoidingView
-      style={[styles.flex, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={[styles.flex, { backgroundColor: theme.colors.background }]}
     >
       <ScrollView
         contentContainerStyle={[
@@ -37,50 +66,98 @@ export function AuthFormLayout({ title, subtitle, children, footer }: AuthFormLa
           },
         ]}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text
-            style={[
-              styles.brand,
-              {
-                color: theme.colors.primary,
-                fontSize: theme.typography.fontSizes.sm,
-                fontWeight: theme.typography.fontWeights.semibold,
-              },
+        {showBack && onBack ? (
+          <Pressable
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+            hitSlop={12}
+            onPress={onBack}
+            style={({ pressed }) => [
+              styles.backButton,
+              { opacity: pressed ? 0.7 : 1 },
             ]}
           >
-            Memora
-          </Text>
-          <Text
-            style={[
-              styles.title,
-              {
-                color: theme.colors.text,
-                fontSize: theme.typography.fontSizes.xxl,
-                fontWeight: theme.typography.fontWeights.bold,
-              },
-            ]}
-          >
-            {title}
-          </Text>
-          {subtitle ? (
+            <Ionicons color={theme.colors.text} name="chevron-back" size={24} />
+          </Pressable>
+        ) : null}
+
+        <Animated.View
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          }}
+        >
+          <View style={styles.brandBlock}>
+            <View
+              style={[
+                styles.brandGlow,
+                {
+                  backgroundColor: `${theme.colors.primary}12`,
+                  borderRadius: theme.radii.xl,
+                },
+              ]}
+            />
             <Text
               style={[
-                styles.subtitle,
+                styles.brandTitle,
                 {
-                  color: theme.colors.textSecondary,
-                  fontSize: theme.typography.fontSizes.md,
+                  color: theme.colors.primary,
+                  fontSize: 26,
+                  fontWeight: theme.typography.fontWeights.bold,
                 },
               ]}
             >
-              {subtitle}
+              ✨ Memora AI
             </Text>
-          ) : null}
-        </View>
+            <Text
+              style={[
+                styles.brandTagline,
+                {
+                  color: theme.colors.textSecondary,
+                  fontSize: theme.typography.fontSizes.sm,
+                },
+              ]}
+            >
+              Your AI-powered knowledge companion
+            </Text>
+          </View>
 
-        <View style={styles.form}>{children}</View>
+          <View style={styles.headlineBlock}>
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: theme.colors.text,
+                  fontSize: 24,
+                  fontWeight: theme.typography.fontWeights.bold,
+                },
+              ]}
+            >
+              {title}
+            </Text>
+            {subtitle ? (
+              <Text
+                numberOfLines={2}
+                style={[
+                  styles.subtitle,
+                  {
+                    color: theme.colors.textSecondary,
+                    fontSize: theme.typography.fontSizes.sm,
+                    lineHeight: 22,
+                  },
+                ]}
+              >
+                {subtitle}
+              </Text>
+            ) : null}
+          </View>
 
-        {footer ? <View style={styles.footer}>{footer}</View> : null}
+          <View style={styles.form}>{children}</View>
+
+          {footer ? <View style={styles.footer}>{footer}</View> : null}
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -94,25 +171,48 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
   },
-  header: {
-    marginBottom: 32,
-  },
-  brand: {
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
+  backButton: {
+    alignItems: 'center',
+    height: 44,
+    justifyContent: 'center',
     marginBottom: 8,
+    marginLeft: -4,
+    width: 44,
+  },
+  brandBlock: {
+    alignItems: 'flex-start',
+    gap: 6,
+    marginBottom: 24,
+    overflow: 'hidden',
+    paddingVertical: 4,
+  },
+  brandGlow: {
+    height: 72,
+    left: -16,
+    position: 'absolute',
+    right: -16,
+    top: -8,
+  },
+  brandTitle: {
+    letterSpacing: -0.4,
+  },
+  brandTagline: {
+    lineHeight: 20,
+    maxWidth: 280,
+  },
+  headlineBlock: {
+    gap: 8,
+    marginBottom: 24,
   },
   title: {
-    marginBottom: 8,
+    letterSpacing: -0.3,
   },
-  subtitle: {
-    lineHeight: 24,
-  },
+  subtitle: {},
   form: {
     gap: 16,
   },
   footer: {
-    marginTop: 24,
     alignItems: 'center',
+    marginTop: 24,
   },
 });

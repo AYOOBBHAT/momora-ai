@@ -54,13 +54,13 @@ function getInitials(name?: string): string {
 
 function getMemberLabel(createdAt?: string): string {
   if (!createdAt) {
-    return 'Memora Member';
+    return 'Memora AI Member';
   }
 
   try {
     return `Member since ${formatDocumentDate(createdAt)}`;
   } catch {
-    return 'Memora Member';
+    return 'Memora AI Member';
   }
 }
 
@@ -113,7 +113,7 @@ export function ProfileScreen() {
     }
 
     Alert.alert(
-      'Rate Memora',
+      'Rate Memora AI',
       'Rate feature will be enabled after public release.',
     );
   };
@@ -380,7 +380,7 @@ export function ProfileScreen() {
                 },
               ]}
             >
-              Made with ❤️ by Memora
+              Made with ❤️ by Memora AI
             </Text>
             <Text
               style={[
