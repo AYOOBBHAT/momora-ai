@@ -112,10 +112,10 @@ EXPO_PUBLIC_API_URL=http://192.168.1.10:4000
 
 **Production (EAS build):**
 
-Set in `mobile/eas.json` profile `env` or EAS Secrets:
+Set in `mobile/eas.json` profile `env` or EAS Secrets (base URL only — no `/api/v1` suffix):
 
 ```env
-EXPO_PUBLIC_API_URL=https://api.yourdomain.com
+EXPO_PUBLIC_API_URL=https://memora.jkssbfy.in
 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=123456789-web.apps.googleusercontent.com
 EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=123456789-android.apps.googleusercontent.com
 EXPO_PUBLIC_PRIVACY_POLICY_URL=https://your-domain/privacy
@@ -126,7 +126,7 @@ EXPO_PUBLIC_TERMS_OF_SERVICE_URL=https://your-domain/terms
 
 ```bash
 cd mobile
-eas secret:create --name EXPO_PUBLIC_API_URL --value https://api.yourdomain.com --scope project
+eas secret:create --name EXPO_PUBLIC_API_URL --value https://memora.jkssbfy.in --scope project
 eas secret:create --name EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID --value <web-client-id> --scope project
 eas secret:create --name EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID --value <android-client-id> --scope project
 eas secret:create --name EXPO_PUBLIC_PRIVACY_POLICY_URL --value https://your-domain/privacy --scope project

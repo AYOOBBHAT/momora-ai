@@ -21,7 +21,7 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://memora-ai-production.up.railway.app"
+        "EXPO_PUBLIC_API_URL": "https://memora.jkssbfy.in"
       },
       "android": {
         "buildType": "apk"
@@ -30,7 +30,7 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://memora-ai-production.up.railway.app"
+        "EXPO_PUBLIC_API_URL": "https://memora.jkssbfy.in"
       },
       "android": {
         "buildType": "app-bundle"

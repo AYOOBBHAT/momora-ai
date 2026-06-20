@@ -46,8 +46,8 @@ Expo inlines `EXPO_PUBLIC_*` variables at **bundle time**. For EAS builds, value
 | Profile | `EXPO_PUBLIC_API_URL` (eas.json) | Resolved Axios `baseURL` (`env.apiUrl + /api/v1`) |
 |---------|----------------------------------|---------------------------------------------------|
 | **development** | `http://10.0.2.2:4000` | `http://10.0.2.2:4000/api/v1` ✓ |
-| **preview** (APK) | `https://192.168.1.9:4000/api/v1` | `https://192.168.1.9:4000/api/v1/api/v1` ✗ |
-| **production** | `https://api.example.com` | `https://api.example.com/api/v1` (placeholder) |
+| **preview** (APK) | `https://memora.jkssbfy.in` | `https://memora.jkssbfy.in/api/v1` ✓ |
+| **production** | `https://memora.jkssbfy.in` | `https://memora.jkssbfy.in/api/v1` ✓ |
 | **Local dev** (`.env`) | `http://192.168.1.9:4000/api/v1` | `http://192.168.1.9:4000/api/v1/api/v1` ✗ |
 
 Correct env format (per README): base URL **without** trailing `/api/v1`, e.g. `http://192.168.1.9:4000`.

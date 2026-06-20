@@ -145,7 +145,7 @@ This adds `extra.eas.projectId` to your app config if not already present.
 | `preview` | Internal APK / test builds |
 | `production` | Store release (Android App Bundle, iOS) |
 
-Update `EXPO_PUBLIC_API_URL` in each profile’s `env` block (or use EAS Secrets) to your **production** API URL before building.
+Update `EXPO_PUBLIC_API_URL` in each profile’s `env` block (or use EAS Secrets) to your **production** API base URL before building (e.g. `https://memora.jkssbfy.in` — no `/api/v1` suffix).
 
 Set `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` via EAS Secrets or profile `env` — must match backend `GOOGLE_CLIENT_ID`.
 
