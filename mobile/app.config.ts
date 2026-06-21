@@ -5,14 +5,6 @@ const SPLASH_BACKGROUND = '#0F172A';
 
 const GOOGLE_CLIENT_ID_SUFFIX = '.apps.googleusercontent.com';
 
-const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() ?? '';
-
-if (!googleWebClientId) {
-  throw new Error(
-    'EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID is required for production builds.',
-  );
-}
-
 /** Reversed Web client ID scheme required by @react-native-google-signin/google-signin on iOS. */
 function googleWebClientIdToIosUrlScheme(clientId: string): string | null {
   const normalized = clientId.trim();
@@ -28,86 +20,113 @@ function googleWebClientIdToIosUrlScheme(clientId: string): string | null {
   return `com.googleusercontent.apps.${clientIdPart}`;
 }
 
-const googleIosUrlScheme = googleWebClientIdToIosUrlScheme(googleWebClientId);
+function resolveGoogleSignInConfig(): {
+  googleWebClientId: string;
+  googleIosUrlScheme: string | null;
+} {
+  const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() ?? '';
+  const googleIosUrlScheme = googleWebClientId
+    ? googleWebClientIdToIosUrlScheme(googleWebClientId)
+    : null;
 
-if (!googleIosUrlScheme) {
-  throw new Error(
-    'EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID must be a valid Google OAuth Web client ID (*.apps.googleusercontent.com).',
-  );
+  if (!googleWebClientId) {
+    console.warn(
+      '[app.config] EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID is not set. ' +
+        'The Google Sign-In config plugin will be omitted until it is provided via .env, eas.json, or EAS env.',
+    );
+  } else if (!googleIosUrlScheme) {
+    console.warn(
+      '[app.config] EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID must be a valid Google OAuth Web client ID ' +
+        '(*.apps.googleusercontent.com). The Google Sign-In config plugin will be omitted.',
+    );
+  }
+
+  return { googleWebClientId, googleIosUrlScheme };
 }
 
-const plugins: ExpoConfig['plugins'] = [
-  [
-    '@react-native-google-signin/google-signin',
-    { iosUrlScheme: googleIosUrlScheme },
-  ],
-  ['expo-build-properties', { android: { usesCleartextTraffic: true } }],
-  [
-    'expo-share-intent',
-    {
-      disableIOS: true,
-      androidIntentFilters: ['text/plain', 'text/*'],
-      androidMainActivityAttributes: {
-        'android:launchMode': 'singleTask',
+function buildPlugins(googleIosUrlScheme: string | null): ExpoConfig['plugins'] {
+  const plugins: ExpoConfig['plugins'] = [
+    ['expo-build-properties', { android: { usesCleartextTraffic: true } }],
+    [
+      'expo-share-intent',
+      {
+        disableIOS: true,
+        androidIntentFilters: ['text/plain', 'text/*'],
+        androidMainActivityAttributes: {
+          'android:launchMode': 'singleTask',
+        },
       },
-    },
-  ],
-];
+    ],
+  ];
 
-export default ({ config }: ConfigContext): ExpoConfig => ({
-  ...config,
+  if (googleIosUrlScheme) {
+    plugins.unshift([
+      '@react-native-google-signin/google-signin',
+      { iosUrlScheme: googleIosUrlScheme },
+    ]);
+  }
 
-  name: 'Memora',
+  return plugins;
+}
 
-  slug: 'memora-mobile',
+export default ({ config }: ConfigContext): ExpoConfig => {
+  const { googleWebClientId, googleIosUrlScheme } = resolveGoogleSignInConfig();
 
-  version: '1.0.0',
+  return {
+    ...config,
 
-  orientation: 'portrait',
+    name: 'Memora',
 
-  icon: APP_LOGO,
+    slug: 'memora-mobile',
 
-  userInterfaceStyle: 'automatic',
+    version: '1.0.0',
 
-  scheme: 'memora',
+    orientation: 'portrait',
 
-  ios: {
-    supportsTablet: true,
+    icon: APP_LOGO,
 
-    bundleIdentifier: 'com.memora.mobile',
+    userInterfaceStyle: 'automatic',
 
-    buildNumber: '1',
-  },
+    scheme: 'memora',
 
-  android: {
-    package: 'com.memora.mobile',
+    ios: {
+      supportsTablet: true,
 
-    versionCode: 1,
+      bundleIdentifier: 'com.memora.mobile',
 
-    softwareKeyboardLayoutMode: 'resize',
-
-    adaptiveIcon: {
-      backgroundColor: SPLASH_BACKGROUND,
-
-      foregroundImage: APP_LOGO,
-    },
-
-    predictiveBackGestureEnabled: false,
-  },
-
-  web: {
-    favicon: APP_LOGO,
-  },
-
-  plugins,
-
-  extra: {
-    eas: {
-      projectId: '1c42952f-f697-437d-9970-bfbae43c5462',
+      buildNumber: '1',
     },
 
-    apiUrl: process.env.EXPO_PUBLIC_API_URL,
+    android: {
+      package: 'com.memora.mobile',
 
-    googleWebClientId,
-  },
-});
+      versionCode: 1,
+
+      softwareKeyboardLayoutMode: 'resize',
+
+      adaptiveIcon: {
+        backgroundColor: SPLASH_BACKGROUND,
+
+        foregroundImage: APP_LOGO,
+      },
+
+      predictiveBackGestureEnabled: false,
+    },
+
+    web: {
+      favicon: APP_LOGO,
+    },
+
+    plugins: buildPlugins(googleIosUrlScheme),
+
+    extra: {
+      eas: {
+        projectId: '1c42952f-f697-437d-9970-bfbae43c5462',
+      },
+
+      apiUrl: process.env.EXPO_PUBLIC_API_URL,
+
+      googleWebClientId,
+    },
+  };
+};
