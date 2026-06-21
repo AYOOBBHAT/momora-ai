@@ -12,6 +12,22 @@ function requireEnv(name: string, value: string | undefined): string {
 
 
 
+function requireApiUrl(name: string, value: string | undefined): string {
+
+  const normalized = requireEnv(name, value);
+
+  if (!/^https?:\/\//i.test(normalized)) {
+
+    throw new Error(`${name} must start with http:// or https:// (got "${normalized}")`);
+
+  }
+
+  return normalized;
+
+}
+
+
+
 function optionalEnv(value: string | undefined): string {
 
   return value?.trim() ?? '';
@@ -22,7 +38,7 @@ function optionalEnv(value: string | undefined): string {
 
 export const env = {
 
-  apiUrl: requireEnv('EXPO_PUBLIC_API_URL', process.env.EXPO_PUBLIC_API_URL),
+  apiUrl: requireApiUrl('EXPO_PUBLIC_API_URL', process.env.EXPO_PUBLIC_API_URL),
 
   googleWebClientId: optionalEnv(process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID),
 
