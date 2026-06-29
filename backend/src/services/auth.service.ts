@@ -15,6 +15,7 @@ import {
   verifyGoogleIdToken,
   findOrCreateGoogleUser,
 } from '@/services/googleAuth.service';
+import { seedStarterCollectionsForNewUser } from '@/services/starterCollections.service';
 
 const REFRESH_COOKIE_NAME = 'refreshToken';
 
@@ -83,6 +84,7 @@ export async function register(
   }
 
   const user = await User.create({ email, password, name, provider: 'local' });
+  await seedStarterCollectionsForNewUser(user._id);
   const tokens = await generateTokens(user);
 
   return { user: toSafeUser(user), tokens };

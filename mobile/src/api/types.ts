@@ -112,6 +112,7 @@ export interface SafeCollection {
   description?: string;
   color?: string;
   icon?: string;
+  sortOrder?: number;
   createdAt: string;
   updatedAt: string;
 }

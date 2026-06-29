@@ -4,6 +4,9 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+  VerifyResetOtp: { email: string };
+  ResetPassword: { email: string; resetToken: string };
+  PasswordResetSuccess: undefined;
 };
 
 export type DocumentsStackParamList = {

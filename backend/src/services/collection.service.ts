@@ -18,6 +18,7 @@ export function toSafeCollection(collection: ICollectionDocument): SafeCollectio
     description: collection.description,
     color: collection.color,
     icon: collection.icon,
+    sortOrder: collection.sortOrder,
     createdAt: collection.createdAt,
     updatedAt: collection.updatedAt,
   };

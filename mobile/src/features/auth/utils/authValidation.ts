@@ -37,3 +37,41 @@ export function validateConfirmPassword(password: string, confirmPassword: strin
   }
   return null;
 }
+
+export type PasswordStrength = 'weak' | 'fair' | 'good' | 'strong';
+
+export function getPasswordStrength(value: string): PasswordStrength {
+  if (!value) {
+    return 'weak';
+  }
+
+  let score = 0;
+  if (value.length >= 8) score += 1;
+  if (value.length >= 12) score += 1;
+  if (/[a-z]/.test(value)) score += 1;
+  if (/[A-Z]/.test(value)) score += 1;
+  if (/[0-9]/.test(value)) score += 1;
+  if (/[^A-Za-z0-9]/.test(value)) score += 1;
+
+  if (score <= 2) return 'weak';
+  if (score <= 4) return 'fair';
+  if (score <= 5) return 'good';
+  return 'strong';
+}
+
+export function validateStrongPassword(value: string): string | null {
+  const baseError = validatePassword(value);
+  if (baseError) {
+    return baseError;
+  }
+  if (!/[a-z]/.test(value)) {
+    return 'Include at least one lowercase letter';
+  }
+  if (!/[A-Z]/.test(value)) {
+    return 'Include at least one uppercase letter';
+  }
+  if (!/[0-9]/.test(value)) {
+    return 'Include at least one number';
+  }
+  return null;
+}

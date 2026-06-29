@@ -22,7 +22,12 @@ vi.mock('@/models/User.model', () => ({
   },
 }));
 
+vi.mock('@/services/starterCollections.service', () => ({
+  seedStarterCollectionsForNewUser: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { User } from '@/models/User.model';
+import { seedStarterCollectionsForNewUser } from '@/services/starterCollections.service';
 import {
   verifyGoogleIdToken,
   findOrCreateGoogleUser,
@@ -129,6 +134,7 @@ describe('findOrCreateGoogleUser', () => {
     });
     expect(result.created).toBe(true);
     expect(result.user).toBe(createdUser);
+    expect(seedStarterCollectionsForNewUser).toHaveBeenCalledWith(createdUser._id);
   });
 
   it('logs in an existing user with matching googleSub', async () => {

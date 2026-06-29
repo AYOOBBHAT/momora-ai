@@ -19,6 +19,12 @@ import {
   clearRefreshTokenCookie,
   REFRESH_COOKIE_NAME,
 } from '@/services/auth.service';
+import {
+  requestPasswordReset,
+  verifyResetOtp,
+  resetPasswordWithToken,
+  PASSWORD_RESET_GENERIC_MESSAGE,
+} from '@/services/passwordReset.service';
 import { AuthTokens, MobileAuthData, SafeUser } from '@/types';
 
 function mobileAuthData(user: SafeUser, tokens: AuthTokens): MobileAuthData {
@@ -156,4 +162,24 @@ export const getCurrentUser = asyncHandler(async (req: Request, res: Response) =
   const user = await getUserById(req.user!.id);
 
   ApiResponse.success(res, 'User profile retrieved', { user });
+});
+
+export const forgotPasswordHandler = asyncHandler(async (req: Request, res: Response) => {
+  await requestPasswordReset(req.body.email);
+
+  ApiResponse.success(res, PASSWORD_RESET_GENERIC_MESSAGE);
+});
+
+export const verifyResetOtpHandler = asyncHandler(async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+  const { resetToken } = await verifyResetOtp(email, otp);
+
+  ApiResponse.success(res, 'Verification code accepted', { resetToken });
+});
+
+export const resetPasswordHandler = asyncHandler(async (req: Request, res: Response) => {
+  const { email, password, resetToken } = req.body;
+  await resetPasswordWithToken(email, password, resetToken);
+
+  ApiResponse.success(res, 'Password updated successfully');
 });

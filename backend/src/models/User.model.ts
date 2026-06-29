@@ -13,6 +13,13 @@ export interface IUser {
   /** Google OAuth subject (`sub` claim); internal identity binding only. */
   googleSub?: string;
   subscription: SubscriptionTier;
+  passwordResetOtpHash?: string;
+  passwordResetOtpExpiresAt?: Date;
+  passwordResetAttempts?: number;
+  passwordResetRequestedAt?: Date;
+  /** SHA-256 hash of the active post-OTP reset JWT (single-use). */
+  passwordResetSessionHash?: string;
+  starterCollectionsSeeded?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,6 +75,31 @@ const userSchema = new Schema<IUserDocument>(
       type: String,
       enum: ['free', 'pro', 'enterprise'] satisfies SubscriptionTier[],
       default: 'free',
+    },
+    passwordResetOtpHash: {
+      type: String,
+      select: false,
+    },
+    passwordResetOtpExpiresAt: {
+      type: Date,
+      select: false,
+    },
+    passwordResetAttempts: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    passwordResetRequestedAt: {
+      type: Date,
+      select: false,
+    },
+    passwordResetSessionHash: {
+      type: String,
+      select: false,
+    },
+    starterCollectionsSeeded: {
+      type: Boolean,
+      default: false,
     },
   },
   {

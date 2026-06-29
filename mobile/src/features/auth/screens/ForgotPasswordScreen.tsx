@@ -6,11 +6,9 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { AuthFormLayout } from '../components/AuthFormLayout';
 import { AuthPrimaryButton } from '../components/AuthPrimaryButton';
 import { AuthTextInput } from '../components/AuthTextInput';
-import {
-  validateConfirmPassword,
-  validateEmail,
-  validatePassword,
-} from '../utils/authValidation';
+import { useForgotPassword } from '../../../hooks/mutations/usePasswordReset';
+import { getApiErrorMessage, isNetworkError } from '../../../lib/apiError';
+import { validateEmail } from '../utils/authValidation';
 import type { AuthStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../theme/ThemeProvider';
 
@@ -20,43 +18,46 @@ export function ForgotPasswordScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const headerHeight = useHeaderHeight();
   const emailRef = useRef<TextInput>(null);
-  const newPasswordRef = useRef<TextInput>(null);
-  const confirmPasswordRef = useRef<TextInput>(null);
+  const forgotPassword = useForgotPassword();
 
   const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [errors, setErrors] = useState<{
-    email?: string;
-    newPassword?: string;
-    confirmPassword?: string;
-  }>({});
-  const [infoMessage, setInfoMessage] = useState<string | null>(null);
-
-  const clearError = (field: keyof typeof errors) => {
-    setErrors((current) => ({ ...current, [field]: undefined }));
-    setInfoMessage(null);
-  };
-
-  const validate = (): boolean => {
-    const nextErrors = {
-      email: validateEmail(email) ?? undefined,
-      newPassword: validatePassword(newPassword) ?? undefined,
-      confirmPassword: validateConfirmPassword(newPassword, confirmPassword) ?? undefined,
-    };
-
-    setErrors(nextErrors);
-    return !Object.values(nextErrors).some(Boolean);
-  };
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const handleSubmit = () => {
-    setInfoMessage(null);
-    if (!validate()) {
+    if (forgotPassword.isPending) {
       return;
     }
 
-    setInfoMessage(
-      'Password reset via email is coming soon. Contact support if you need help accessing your account.',
+    setApiError(null);
+
+    const error = validateEmail(email);
+    if (error) {
+      setEmailError(error);
+      return;
+    }
+
+    setEmailError(null);
+
+    forgotPassword.mutate(
+      { email: email.trim() },
+      {
+        onSuccess: () => {
+          navigation.navigate('VerifyResetOtp', { email: email.trim() });
+        },
+        onError: (error) => {
+          if (isNetworkError(error)) {
+            setApiError('No internet connection. Check your network and try again.');
+            return;
+          }
+          setApiError(
+            getApiErrorMessage(
+              error,
+              'Unable to send verification code. Please try again.',
+            ),
+          );
+        },
+      },
     );
   };
 
@@ -64,17 +65,14 @@ export function ForgotPasswordScreen({ navigation }: Props) {
     <AuthFormLayout
       brandTagline="Your second brain"
       keyboardVerticalOffset={headerHeight}
-      subtitle="Enter your email and choose a new password. We'll enable email reset soon."
-      title="Reset password"
+      subtitle="Enter the email linked to your account and we'll send a 6-digit verification code."
+      title="Forgot password"
       footer={
         <Pressable
           accessibilityRole="button"
           hitSlop={8}
           onPress={() => navigation.navigate('Login')}
-          style={({ pressed }) => [
-            styles.backLink,
-            { opacity: pressed ? 0.75 : 1 },
-          ]}
+          style={({ pressed }) => [styles.backLink, { opacity: pressed ? 0.75 : 1 }]}
         >
           <Text
             style={[
@@ -91,11 +89,9 @@ export function ForgotPasswordScreen({ navigation }: Props) {
         </Pressable>
       }
     >
-      {infoMessage ? (
-        <View style={[styles.infoBox, { backgroundColor: `${theme.colors.primary}12` }]}>
-          <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
-            {infoMessage}
-          </Text>
+      {apiError ? (
+        <View style={[styles.messageBox, { backgroundColor: `${theme.colors.error}15` }]}>
+          <Text style={[styles.messageText, { color: theme.colors.error }]}>{apiError}</Text>
         </View>
       ) : null}
 
@@ -104,71 +100,37 @@ export function ForgotPasswordScreen({ navigation }: Props) {
         autoCapitalize="none"
         autoComplete="email"
         autoCorrect={false}
-        error={errors.email}
+        error={emailError}
         keyboardType="email-address"
         label="Email"
         placeholder="you@example.com"
-        returnKeyType="next"
+        returnKeyType="done"
         textContentType="emailAddress"
         value={email}
         onChangeText={(value) => {
-          clearError('email');
+          setEmailError(null);
+          setApiError(null);
           setEmail(value);
-        }}
-        onSubmitEditing={() => newPasswordRef.current?.focus()}
-      />
-
-      <AuthTextInput
-        ref={newPasswordRef}
-        autoCapitalize="none"
-        autoComplete="new-password"
-        autoCorrect={false}
-        error={errors.newPassword}
-        label="New password"
-        passwordToggle
-        placeholder="At least 8 characters"
-        returnKeyType="next"
-        secureTextEntry
-        textContentType="newPassword"
-        value={newPassword}
-        onChangeText={(value) => {
-          clearError('newPassword');
-          setNewPassword(value);
-        }}
-        onSubmitEditing={() => confirmPasswordRef.current?.focus()}
-      />
-
-      <AuthTextInput
-        ref={confirmPasswordRef}
-        autoCapitalize="none"
-        autoComplete="new-password"
-        autoCorrect={false}
-        error={errors.confirmPassword}
-        label="Confirm password"
-        passwordToggle
-        placeholder="Re-enter new password"
-        returnKeyType="done"
-        secureTextEntry
-        textContentType="newPassword"
-        value={confirmPassword}
-        onChangeText={(value) => {
-          clearError('confirmPassword');
-          setConfirmPassword(value);
         }}
         onSubmitEditing={handleSubmit}
       />
 
-      <AuthPrimaryButton label="Reset password" onPress={handleSubmit} />
+      <AuthPrimaryButton
+        label="Send code"
+        loading={forgotPassword.isPending}
+        loadingLabel="Sending code…"
+        onPress={handleSubmit}
+      />
     </AuthFormLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  infoBox: {
+  messageBox: {
     borderRadius: 12,
     padding: 12,
   },
-  infoText: {
+  messageText: {
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',

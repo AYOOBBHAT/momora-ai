@@ -37,7 +37,7 @@ export function CollectionPreviewCard({
         style={[
           styles.iconWrap,
           {
-            backgroundColor: theme.colors.surfaceSecondary,
+            backgroundColor: theme.colors.surfaceElevated,
             borderColor: theme.colors.border,
             borderRadius: theme.radii.md,
           },
@@ -93,12 +93,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   iconWrap: {
-    width: 40,
-    height: 40,
     alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 44,
     justifyContent: 'center',
     marginBottom: 4,
-    borderWidth: StyleSheet.hairlineWidth,
+    width: 44,
   },
   name: {
     lineHeight: 20,

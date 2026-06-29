@@ -15,9 +15,9 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { EmptyState } from '../../../components/ui/EmptyState';
 import { SectionHeader } from '../../../components/ui/SectionHeader';
 import { AddContentSheet } from '../components/AddContentSheet';
+import { CollectionEmptyGuidance } from '../components/CollectionEmptyGuidance';
 import { CollectionDocumentRow } from '../components/CollectionDocumentRow';
 import { ErrorBanner } from '../components/ErrorBanner';
 import { DEFAULT_COLLECTION_COLOR, DEFAULT_COLLECTION_ICON } from '../constants';
@@ -88,6 +88,11 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
 
   const handleOpenAddContent = useCallback(() => {
     setAddContentFlow(null);
+    setIsAddSheetOpen(true);
+  }, []);
+
+  const handleQuickAddFlow = useCallback((flow: 'pdf' | 'url' | 'youtube' | 'note') => {
+    setAddContentFlow(flow);
     setIsAddSheetOpen(true);
   }, []);
 
@@ -380,13 +385,7 @@ export function CollectionDetailScreen({ navigation, route }: Props) {
               onRetry={() => void refetchDocuments()}
             />
           ) : documents.length === 0 ? (
-            <EmptyState
-              actionLabel="Add Content"
-              icon="📚"
-              subtitle="Add PDFs, websites, YouTube videos or notes to start chatting with AI."
-              title="This collection is empty."
-              onActionPress={handleOpenAddContent}
-            />
+            <CollectionEmptyGuidance onSelectFlow={handleQuickAddFlow} />
           ) : (
             <View style={styles.documentsList}>
               {documents.map((document) => (

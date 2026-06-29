@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useKeyboardInset } from '../../../hooks/useKeyboardInset';
@@ -72,9 +72,7 @@ export function OnboardingLayout({
         <Animated.View
           style={[
             styles.footer,
-            Platform.OS === 'ios' && isKeyboardVisible
-              ? { paddingBottom: footerPadding }
-              : null,
+            isKeyboardVisible ? { paddingBottom: footerPadding } : null,
           ]}
         >
           {footer}

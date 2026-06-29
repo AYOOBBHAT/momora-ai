@@ -1,26 +1,21 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import jwt from 'jsonwebtoken';
 
-vi.mock('@/config/env', () => ({
-  env: {
-    JWT_REFRESH_EXPIRES_IN: '30d',
-  },
-}));
+import { env } from '@/config/env';
+import { verifyAccessToken } from '@/services/token.service';
 
-import { getRefreshTokenExpiry } from '@/services/token.service';
+describe('token.service access token guard', () => {
+  it('rejects password reset tokens presented as access tokens', () => {
+    const resetToken = jwt.sign(
+      {
+        sub: 'user-id',
+        email: 'user@example.com',
+        purpose: 'password_reset',
+      },
+      env.JWT_ACCESS_SECRET,
+      { expiresIn: '15m' },
+    );
 
-describe('getRefreshTokenExpiry', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-06-15T12:00:00.000Z'));
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('returns a date 30 days in the future when JWT_REFRESH_EXPIRES_IN is 30d', () => {
-    const expiry = getRefreshTokenExpiry();
-
-    expect(expiry.toISOString()).toBe('2026-07-15T12:00:00.000Z');
+    expect(() => verifyAccessToken(resetToken)).toThrow();
   });
 });

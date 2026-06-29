@@ -82,6 +82,12 @@ export interface JwtPayload {
   role: UserRole;
 }
 
+export interface PasswordResetJwtPayload {
+  sub: string;
+  email: string;
+  purpose: 'password_reset';
+}
+
 export interface AuthenticatedUser {
   id: string;
   email: string;
@@ -158,6 +164,7 @@ export interface SafeCollection {
   description?: string;
   color?: string;
   icon?: string;
+  sortOrder?: number;
   createdAt: Date;
   updatedAt: Date;
 }

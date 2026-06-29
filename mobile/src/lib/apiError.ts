@@ -12,6 +12,14 @@ const SAFE_AUTH_MESSAGES = new Set([
   'Login successful',
   'Invalid or expired Google ID token',
   'Google account email is required',
+  'If an account exists for this email, a verification code has been sent.',
+  'Verification code accepted',
+  'Password updated successfully',
+  'Invalid verification code.',
+  'Verification code has expired. Please request a new one.',
+  'Too many attempts. Please request a new code.',
+  'Invalid or expired reset session.',
+  'Unable to send verification email. Please try again later.',
 ]);
 
 export function isAuthHttpError(error: unknown): boolean {

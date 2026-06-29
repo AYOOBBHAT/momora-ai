@@ -1,23 +1,14 @@
 import { useCallback, type RefObject } from 'react';
 import { Keyboard, type TextInputProps, type View } from 'react-native';
 
-import { useKeyboardScroll } from './KeyboardScrollContext';
-
+/**
+ * Kept for API compatibility. Scrolling a focused input into view is now handled
+ * natively by `KeyboardAwareScrollView`, so the returned handler is a no-op.
+ */
 export function useScrollInputIntoView(
-  containerRef: RefObject<View | null>,
+  _containerRef: RefObject<View | null>,
 ): NonNullable<TextInputProps['onFocus']> {
-  const scrollContext = useKeyboardScroll();
-
-  return useCallback(() => {
-    if (!scrollContext || !containerRef.current) {
-      return;
-    }
-
-    containerRef.current.measureInWindow((_x, y, _width, height) => {
-      scrollContext.registerFocusedInput(y, height);
-      scrollContext.scrollToInput(y, height);
-    });
-  }, [containerRef, scrollContext]);
+  return useCallback(() => {}, []);
 }
 
 export function dismissKeyboard(): void {

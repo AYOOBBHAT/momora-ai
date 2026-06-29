@@ -6,6 +6,7 @@ export interface ICollection {
   description?: string;
   color?: string;
   icon?: string;
+  sortOrder?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +43,10 @@ const collectionSchema = new Schema<ICollectionDocument>(
       type: String,
       trim: true,
       maxlength: [50, 'Icon cannot exceed 50 characters'],
+    },
+    sortOrder: {
+      type: Number,
+      min: [1, 'Sort order must be at least 1'],
     },
   },
   {

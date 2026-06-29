@@ -27,6 +27,13 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   /** Android OAuth client ID — optional; required for Play Store ID tokens (aud = Android client). */
   GOOGLE_ANDROID_CLIENT_ID: z.string().min(1).optional(),
+  /** Resend API key for transactional email (password reset OTP). */
+  RESEND_API_KEY: z.string().min(1).optional(),
+  /** Verified sender address in Resend (e.g. Memora <noreply@yourdomain.com>). */
+  EMAIL_FROM: z.string().min(3).optional(),
+  PASSWORD_RESET_OTP_EXPIRES_MINUTES: z.coerce.number().int().min(5).max(30).default(10),
+  PASSWORD_RESET_RESEND_COOLDOWN_SECONDS: z.coerce.number().int().min(30).max(300).default(60),
+  PASSWORD_RESET_MAX_ATTEMPTS: z.coerce.number().int().min(3).max(10).default(5),
   GOOGLE_AI_API_KEY: z.string().min(1).optional(),
   GEMINI_EMBEDDING_MODEL: z.string().default('gemini-embedding-001'),
   GROQ_API_KEY: z.string().min(1).optional(),

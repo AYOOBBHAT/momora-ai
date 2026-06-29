@@ -1,4 +1,3 @@
-import Constants from 'expo-constants';
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import {
@@ -26,8 +25,11 @@ import { useLogout } from '../../../hooks/mutations/useLogout';
 import { formatDocumentDate } from '../../documents/utils/formatDocument';
 import { getApiErrorMessage } from '../../../lib/apiError';
 import { useTheme } from '../../../theme/ThemeProvider';
+import { FeedbackAppInfoCard } from '../components/FeedbackAppInfoCard';
 import { HelpFaqSheet } from '../components/HelpFaqSheet';
 import { ProfileMenuRow, ProfileSection } from '../components/ProfileSection';
+import { getAppVersionLabel } from '../utils/appInfo';
+import { promptOpenFeedbackForm } from '../utils/feedbackForm';
 
 function openExternalUrl(url: string, label: string) {
   if (!url) {
@@ -65,16 +67,6 @@ function getMemberLabel(createdAt?: string): string {
   } catch {
     return 'Memora AI Member';
   }
-}
-
-function getAppVersionLabel(): string {
-  const version = Constants.expoConfig?.version ?? '1.0.0';
-  const build =
-    Constants.nativeBuildVersion ??
-    Constants.expoConfig?.ios?.buildNumber ??
-    Constants.expoConfig?.android?.versionCode?.toString();
-
-  return build ? `Version ${version} (${build})` : `Version ${version}`;
 }
 
 export function ProfileScreen() {
@@ -330,6 +322,25 @@ export function ProfileScreen() {
             />
           </ProfileSection>
         ) : null}
+
+        <ProfileSection title="Support & Feedback">
+          <ProfileMenuRow
+            icon="bug-outline"
+            label="Report a Bug"
+            onPress={() => promptOpenFeedbackForm('bug')}
+          />
+          <ProfileMenuRow
+            icon="bulb-outline"
+            label="Suggest a Feature"
+            onPress={() => promptOpenFeedbackForm('feature')}
+          />
+          <ProfileMenuRow
+            icon="chatbubble-ellipses-outline"
+            label="Send Feedback"
+            onPress={() => promptOpenFeedbackForm('general')}
+          />
+          <FeedbackAppInfoCard />
+        </ProfileSection>
 
         <ProfileSection title="Support">
           <ProfileMenuRow

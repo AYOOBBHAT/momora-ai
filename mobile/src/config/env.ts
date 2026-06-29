@@ -50,5 +50,13 @@ export const env = {
 
   supportEmail: optionalEnv(process.env.EXPO_PUBLIC_SUPPORT_EMAIL) || 'dbmemora@gmail.com',
 
+  /** Google Form URL for Closed Beta feedback (viewform link). */
+  feedbackFormUrl: optionalEnv(process.env.EXPO_PUBLIC_FEEDBACK_FORM_URL),
+
+  /** Optional Google Form entry IDs for pre-filling fields (from form prefill link). */
+  feedbackFormEntryType: optionalEnv(process.env.EXPO_PUBLIC_FEEDBACK_FORM_ENTRY_TYPE),
+  feedbackFormEntryVersion: optionalEnv(process.env.EXPO_PUBLIC_FEEDBACK_FORM_ENTRY_VERSION),
+  feedbackFormEntryPlatform: optionalEnv(process.env.EXPO_PUBLIC_FEEDBACK_FORM_ENTRY_PLATFORM),
+
 } as const;
 

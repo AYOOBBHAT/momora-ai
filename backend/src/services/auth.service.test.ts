@@ -28,11 +28,16 @@ vi.mock('@/services/token.service', () => ({
   getRefreshTokenExpiry: vi.fn(() => new Date('2030-01-01T00:00:00.000Z')),
 }));
 
+vi.mock('@/services/starterCollections.service', () => ({
+  seedStarterCollectionsForNewUser: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { User } from '@/models/User.model';
 import { RefreshToken, hashToken } from '@/models/RefreshToken.model';
 import { HTTP_STATUS } from '@/constants/httpStatus';
 import { login, register, refreshTokens } from '@/services/auth.service';
 import { verifyRefreshToken } from '@/services/token.service';
+import { seedStarterCollectionsForNewUser } from '@/services/starterCollections.service';
 
 const mockUser = {
   _id: { toString: () => 'user-id-1' },
@@ -66,6 +71,7 @@ describe('auth.service token responses', () => {
         userId: mockUser._id,
       }),
     );
+    expect(seedStarterCollectionsForNewUser).toHaveBeenCalledWith(mockUser._id);
   });
 
   it('login returns access and refresh tokens for mobile-capable clients', async () => {

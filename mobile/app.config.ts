@@ -49,6 +49,15 @@ function buildPlugins(googleIosUrlScheme: string | null): ExpoConfig['plugins'] 
   const allowCleartextTraffic = apiUrl.startsWith('http://');
 
   const plugins: ExpoConfig['plugins'] = [
+    [
+      'expo-splash-screen',
+      {
+        backgroundColor: '#0F172A',
+        image: APP_LOGO,
+        resizeMode: 'contain',
+      },
+    ],
+    'expo-font',
     ['expo-build-properties', { android: { usesCleartextTraffic: allowCleartextTraffic } }],
     [
       'expo-share-intent',

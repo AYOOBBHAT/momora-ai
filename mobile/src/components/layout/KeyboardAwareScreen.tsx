@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import {
-  Animated,
   Keyboard,
-  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   View,
   type ScrollViewProps,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  KeyboardAwareScrollView,
+} from 'react-native-keyboard-controller';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { useKeyboardInset } from '../../hooks/useKeyboardInset';
@@ -33,6 +34,7 @@ type ScrollProps = BaseProps & {
   variant: 'scroll';
   contentContainerStyle?: StyleProp<ViewStyle>;
   footer?: ReactNode;
+  /** Extra gap kept between a focused input and the keyboard. */
   keyboardVerticalOffset?: number;
   scrollViewProps?: Omit<
     ScrollViewProps,
@@ -42,6 +44,8 @@ type ScrollProps = BaseProps & {
 
 export type KeyboardAwareScreenProps = ComposerProps | ScrollProps;
 
+const DEFAULT_BOTTOM_OFFSET = 24;
+
 export function KeyboardAwareScreen(props: KeyboardAwareScreenProps) {
   if (props.variant === 'composer') {
     return <KeyboardAwareComposerScreen {...props} />;
@@ -50,6 +54,11 @@ export function KeyboardAwareScreen(props: KeyboardAwareScreenProps) {
   return <KeyboardAwareScrollScreen {...props} />;
 }
 
+/**
+ * Docked-footer layout (e.g. the chat composer). The footer is kept directly
+ * above the keyboard via a native keyboard-avoiding container, so the content
+ * area shrinks and the input never sits behind the keyboard.
+ */
 function KeyboardAwareComposerScreen({
   children,
   footer,
@@ -57,7 +66,7 @@ function KeyboardAwareComposerScreen({
   backgroundColor,
   safeAreaEdges = ['bottom'],
 }: ComposerProps) {
-  const { isKeyboardVisible, footerPadding } = useKeyboardInset();
+  const { isKeyboardVisible } = useKeyboardInset();
 
   const edges = useMemo(
     () => (isKeyboardVisible ? ([] as Edge[]) : safeAreaEdges),
@@ -67,15 +76,20 @@ function KeyboardAwareComposerScreen({
   return (
     <View style={[styles.flex, backgroundColor ? { backgroundColor } : null, style]}>
       <SafeAreaView edges={edges} style={styles.flex}>
-        <View style={styles.flex}>{children}</View>
-        <Animated.View style={{ paddingBottom: Platform.OS === 'ios' ? footerPadding : 0 }}>
+        <KeyboardAvoidingView automaticOffset behavior="padding" style={styles.flex}>
+          <View style={styles.flex}>{children}</View>
           {footer}
-        </Animated.View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
 }
 
+/**
+ * Scrolling-form layout (auth, document/collection forms, onboarding note).
+ * The keyboard-aware scroll view automatically scrolls the focused input into
+ * view and keeps it above the keyboard on both platforms.
+ */
 function KeyboardAwareScrollScreen({
   children,
   contentContainerStyle,
@@ -85,61 +99,17 @@ function KeyboardAwareScrollScreen({
   keyboardVerticalOffset = 0,
   scrollViewProps,
 }: ScrollProps) {
-  const { isKeyboardVisible } = useKeyboardInset();
-  const scrollRef = useRef<ScrollView>(null);
-  const scrollOffsetRef = useRef(0);
-  const focusedInputRef = useRef<{ y: number; height: number } | null>(null);
-
-  const scrollToInput = useCallback(
-    (inputY: number, inputHeight: number) => {
-      const tryScroll = () => {
-        const metrics = Keyboard.metrics();
-        if (!metrics || metrics.height <= 0) {
-          return false;
-        }
-
-        const visibleBottom = metrics.screenY - keyboardVerticalOffset - 16;
-        const inputBottom = inputY + inputHeight;
-
-        if (inputBottom <= visibleBottom) {
-          return true;
-        }
-
-        scrollRef.current?.scrollTo({
-          y: scrollOffsetRef.current + (inputBottom - visibleBottom),
-          animated: true,
-        });
-        return true;
-      };
-
-      if (!tryScroll()) {
-        requestAnimationFrame(tryScroll);
-      }
-    },
-    [keyboardVerticalOffset],
-  );
-
-  const registerFocusedInput = useCallback((inputY: number, inputHeight: number) => {
-    focusedInputRef.current = { y: inputY, height: inputHeight };
-  }, []);
-
+  // Manual scroll-into-view is now handled natively by the scroll view, so the
+  // context exposes no-ops while preserving the public hook API used by fields.
   const scrollContextValue = useMemo(
     () => ({
-      scrollToInput,
-      registerFocusedInput,
+      scrollToInput: () => {},
+      registerFocusedInput: () => {},
     }),
-    [registerFocusedInput, scrollToInput],
+    [],
   );
 
-  useEffect(() => {
-    if (!isKeyboardVisible || !focusedInputRef.current) {
-      return;
-    }
-
-    const { y, height } = focusedInputRef.current;
-    const timer = setTimeout(() => scrollToInput(y, height), Platform.OS === 'ios' ? 50 : 100);
-    return () => clearTimeout(timer);
-  }, [isKeyboardVisible, scrollToInput]);
+  const bottomOffset = keyboardVerticalOffset > 0 ? keyboardVerticalOffset : DEFAULT_BOTTOM_OFFSET;
 
   return (
     <KeyboardScrollContext.Provider value={scrollContextValue}>
@@ -150,23 +120,18 @@ function KeyboardAwareScrollScreen({
           onPress={Keyboard.dismiss}
           style={styles.flex}
         >
-          <ScrollView
-            ref={scrollRef}
-            automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+          <KeyboardAwareScrollView
+            bottomOffset={bottomOffset}
             contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
             keyboardDismissMode="on-drag"
             keyboardShouldPersistTaps="handled"
-            onScroll={(event) => {
-              scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
-            }}
-            scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
             style={styles.flex}
             {...scrollViewProps}
           >
             {children}
             {footer}
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </Pressable>
       </View>
     </KeyboardScrollContext.Provider>

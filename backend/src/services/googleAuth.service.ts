@@ -3,6 +3,7 @@ import { User, IUserDocument } from '@/models/User.model';
 import { ApiError } from '@/utils/ApiError';
 import { HTTP_STATUS } from '@/constants/httpStatus';
 import { env } from '@/config/env';
+import { seedStarterCollectionsForNewUser } from '@/services/starterCollections.service';
 
 export interface GoogleTokenPayload {
   email: string;
@@ -108,6 +109,8 @@ export async function findOrCreateGoogleUser(
     provider: 'google',
     googleSub: payload.sub,
   });
+
+  await seedStarterCollectionsForNewUser(user._id);
 
   return { user, created: true };
 }

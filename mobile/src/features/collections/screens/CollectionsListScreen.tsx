@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useLayoutEffect, useMemo } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
@@ -11,20 +11,29 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { CollectionCard } from '../components/CollectionCard';
 import { ErrorBanner } from '../components/ErrorBanner';
+import { StarterWelcomeDialog } from '../components/StarterWelcomeDialog';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { Skeleton } from '../../../components/ui/Skeleton';
+import { useAuthMe } from '../../../hooks/queries/useAuthMe';
 import { useCollections } from '../../../hooks/queries/useCollections';
 import { useDocuments } from '../../../hooks/queries/useDocuments';
 import { getApiErrorMessage } from '../../../lib/apiError';
 import type { CollectionsStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../theme/ThemeProvider';
+import {
+  getStarterWelcomeDismissed,
+  setStarterWelcomeDismissed,
+} from '../storage/starterWelcome';
+import { hasStarterCollections } from '../utils/sortCollections';
 
 type Props = NativeStackScreenProps<CollectionsStackParamList, 'CollectionsList'>;
 
 export function CollectionsListScreen({ navigation }: Props) {
   const { theme } = useTheme();
+  const { data: user } = useAuthMe();
   const { data: collections = [], isLoading, isError, error, refetch, isRefetching } = useCollections();
   const { data: documents = [] } = useDocuments();
+  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
 
   const documentCountByCollection = useMemo(() => {
     const counts = new Map<string, number>();
@@ -48,6 +57,34 @@ export function CollectionsListScreen({ navigation }: Props) {
     [navigation],
   );
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function evaluateWelcomeDialog() {
+      if (!user?.id || isLoading || collections.length === 0 || !hasStarterCollections(collections)) {
+        return;
+      }
+
+      const dismissed = await getStarterWelcomeDismissed(user.id);
+      if (!cancelled && !dismissed) {
+        setShowWelcomeDialog(true);
+      }
+    }
+
+    void evaluateWelcomeDialog();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [collections, isLoading, user?.id]);
+
+  const handleDismissWelcome = useCallback(async () => {
+    setShowWelcomeDialog(false);
+    if (user?.id) {
+      await setStarterWelcomeDismissed(user.id);
+    }
+  }, [user?.id]);
+
   const renderCollection = useCallback(
     ({ item }: { item: (typeof collections)[number] }) => (
       <CollectionCard
@@ -56,7 +93,7 @@ export function CollectionsListScreen({ navigation }: Props) {
         onPress={() => handleCollectionPress(item.id)}
       />
     ),
-    [documentCountByCollection, handleCollectionPress],
+    [collections, documentCountByCollection, handleCollectionPress],
   );
 
   const collectionKeyExtractor = useCallback((item: (typeof collections)[number]) => item.id, []);
@@ -144,6 +181,7 @@ export function CollectionsListScreen({ navigation }: Props) {
       >
         <Ionicons name="add" size={26} color={theme.colors.primaryText} />
       </Pressable>
+      <StarterWelcomeDialog onDismiss={() => void handleDismissWelcome()} visible={showWelcomeDialog} />
     </View>
   );
 }
